@@ -1,0 +1,3952 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link href="https://fonts.cdnfonts.com/css/minecraftia" rel="stylesheet">
+  <title>F3 + Piechart HTML Simulator</title>
+  <style>
+    :root {
+      --bg: #0b0c0f;
+      --panel: #11141a;
+      --panel-soft: #151a22;
+      --border: #2a3140;
+      --text: #e4e8ee;
+      --muted: #96a0b1;
+      --accent: #8fdcff;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 24% 8%, #182533 0%, #0b0c10 55%),
+        linear-gradient(180deg, #090a0d, #10131a 45%, #0a0c10);
+      color: var(--text);
+      font-family: 'Minecraftia', "Consolas", "Cascadia Mono", "SFMono-Regular", "Liberation Mono", monospace;
+      padding: 12px;
+    }
+
+    .app {
+      width: min(100%, 1680px);
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: minmax(320px, 380px) minmax(0, 1fr);
+      gap: 12px;
+      align-items: start;
+    }
+
+    .controls {
+      background: linear-gradient(180deg, #12161d, #10141a);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      display: grid;
+      gap: 12px;
+      align-content: start;
+      max-height: calc(100vh - 24px);
+      overflow: auto;
+      position: sticky;
+      top: 12px;
+    }
+
+    .panel-header {
+      display: grid;
+      gap: 8px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .panel-title {
+      margin: 0;
+      font-size: 14px;
+      color: #f4f8ff;
+    }
+
+    .status {
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.4;
+      word-break: break-word;
+    }
+
+    .control-card {
+      display: grid;
+      gap: 10px;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--panel-soft);
+    }
+
+    .card-title {
+      margin: 0;
+      font-size: 12px;
+      color: #edf3ff;
+    }
+
+    .card-header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .card-collapse-toggle {
+      width: auto;
+      min-height: 24px;
+      min-width: 70px;
+      padding: 2px 8px;
+      font-size: 10px;
+    }
+
+    .collapsible-body[hidden] {
+      display: none;
+    }
+
+    .field-grid {
+      display: grid;
+      gap: 8px;
+    }
+
+    .resolution-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .mirror-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .field {
+      min-width: 0;
+      display: grid;
+      gap: 4px;
+    }
+
+    .keybind-grid {
+      display: grid;
+      gap: 8px;
+    }
+
+    .overlay-generator-grid {
+      display: grid;
+      gap: 8px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .keybind-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+      min-height: 32px;
+      border: 1px solid #3a4354;
+      border-radius: 4px;
+      background: #0d1118;
+      padding: 4px 7px;
+    }
+
+    .keybind-name {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .keybind-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .keybind-value {
+      min-width: 80px;
+      text-align: center;
+      color: #d8ebff;
+      font-size: 11px;
+      border: 1px solid #2f3b51;
+      border-radius: 4px;
+      background: #111823;
+      padding: 2px 6px;
+    }
+
+    .keybind-controls button {
+      width: auto;
+      min-height: 24px;
+      min-width: 54px;
+      padding: 2px 8px;
+      font-size: 10px;
+    }
+
+    label {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    select,
+    input,
+    button {
+      width: 100%;
+      background: #0d1118;
+      color: var(--text);
+      border: 1px solid #3a4354;
+      padding: 4px 7px;
+      font: inherit;
+      font-size: 11px;
+      border-radius: 4px;
+      min-height: 30px;
+    }
+
+    input[type="file"] {
+      width: 100%;
+      padding: 2px 6px;
+    }
+
+    input[type="checkbox"] {
+      width: auto;
+      min-height: auto;
+      accent-color: #5fbe5f;
+    }
+
+    button {
+      cursor: pointer;
+      background: linear-gradient(180deg, #253042, #1b2433);
+    }
+
+    button:hover {
+      background: linear-gradient(180deg, #2b374b, #1f2a3a);
+    }
+
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .action-row {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .action-row button {
+      flex: 1 1 0;
+      min-width: 86px;
+    }
+
+    .selection-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .workspace {
+      min-width: 0;
+      display: grid;
+      gap: 10px;
+      align-content: start;
+    }
+
+    .workspace-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--panel);
+      padding: 8px 10px;
+    }
+
+    .workspace-title {
+      color: #dce7f9;
+      font-size: 12px;
+    }
+
+    .viewport-wrap {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      background: #000;
+      width: 100%;
+      aspect-ratio: var(--preview-aspect, 16 / 9);
+      position: relative;
+      min-height: 340px;
+    }
+
+    #screenCanvas {
+      display: block;
+      position: absolute;
+      left: var(--canvas-left, 0px);
+      top: var(--canvas-top, 0px);
+      transform: translate(var(--canvas-pan-x, 0px), var(--canvas-pan-y, 0px));
+      transform-origin: top left;
+      width: var(--canvas-display-width, 100%);
+      height: var(--canvas-display-height, 100%);
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      background: #000;
+      z-index: 1;
+      touch-action: none;
+    }
+
+    #eyeMeasureOverlayCanvas {
+      display: block;
+      position: absolute;
+      left: var(--overlay-left, 0px);
+      top: var(--overlay-top, 0px);
+      width: var(--overlay-display-width, 0px);
+      height: var(--overlay-display-height, 0px);
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    #eyeMeasureOverlayCanvas.hidden {
+      display: none;
+    }
+
+    #eyeMeasureTextCanvas {
+      display: block;
+      position: absolute;
+      left: var(--overlay-left, 0px);
+      top: var(--overlay-top, 0px);
+      width: var(--overlay-display-width, 0px);
+      height: var(--overlay-display-height, 0px);
+      image-rendering: auto;
+      z-index: 3;
+      pointer-events: none;
+    }
+
+    #eyeMeasureTextCanvas.hidden {
+      display: none;
+    }
+
+    .viewport-wrap.mirror-selecting #screenCanvas {
+      cursor: crosshair;
+    }
+
+    .viewport-wrap.color-picking-screen #screenCanvas {
+      cursor: crosshair;
+    }
+
+    .viewport-wrap.panning #screenCanvas {
+      cursor: grabbing;
+    }
+
+    .zoom-controls {
+      position: absolute;
+      right: 8px;
+      top: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      z-index: 7;
+      padding: 4px 6px;
+      border: 1px solid #2f3949;
+      border-radius: 6px;
+      background: rgba(8, 10, 14, 0.9);
+    }
+
+    .zoom-controls button {
+      width: auto;
+      min-width: 32px;
+    }
+
+    .zoom-level {
+      min-width: 44px;
+      text-align: center;
+      color: #cfdcf0;
+      font-size: 11px;
+      user-select: none;
+    }
+
+    .mirror-selection-box {
+      position: absolute;
+      border: 1px dashed #7fe0ff;
+      background: rgba(74, 183, 255, 0.2);
+      z-index: 4;
+      pointer-events: none;
+      display: none;
+    }
+
+    .mirror-selection-box.active {
+      display: block;
+    }
+
+    .mirror-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .mirror-item {
+      display: grid;
+      gap: 7px;
+      padding: 7px 8px;
+      border: 1px solid #334057;
+      border-radius: 6px;
+      background: #0f141d;
+      font-size: 11px;
+      color: #d7deea;
+    }
+
+    .mirror-main {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .mirror-label {
+      min-width: 0;
+      word-break: break-word;
+      color: #ced8e8;
+    }
+
+    .mirror-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .mirror-actions button {
+      width: auto;
+      min-width: 76px;
+    }
+
+    .mirror-key-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .mirror-key-controls button {
+      width: auto;
+    }
+
+    .mirror-key-controls input[type="color"] {
+      width: 36px;
+      min-height: 28px;
+      padding: 1px;
+      border-radius: 4px;
+      border: 1px solid #3b3b3b;
+      background: #0f0f0f;
+    }
+
+    .mirror-key-count {
+      color: #98a4b8;
+      font-size: 10px;
+      margin-left: auto;
+    }
+
+    .mirror-key-list {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .mirror-key-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      border: 1px solid #344054;
+      border-radius: 4px;
+      background: #101722;
+      padding: 2px 5px;
+      font-size: 10px;
+      color: #d7deea;
+    }
+
+    .mirror-key-swatch {
+      width: 10px;
+      height: 10px;
+      border: 1px solid #212121;
+      border-radius: 2px;
+      background: var(--key-color, #000000);
+      flex: none;
+    }
+
+    .mirror-key-remove {
+      width: auto;
+      min-height: 20px;
+      min-width: 20px;
+      padding: 2px 5px;
+      line-height: 1;
+      font-size: 10px;
+    }
+
+    .mirror-empty {
+      color: #9ba7bc;
+      font-size: 11px;
+      padding: 4px 0;
+    }
+
+    .mirror-selection-status {
+      color: #9ca7ba;
+      font-size: 11px;
+    }
+
+    .mirror-selection-status.active {
+      color: var(--accent);
+    }
+
+    .mirror-overlay-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      pointer-events: none;
+    }
+
+    .mirror-overlay-layer.hidden {
+      display: none;
+    }
+
+    .mirror-overlay {
+      position: absolute;
+      border: 1px solid #3b4a62;
+      border-radius: 6px;
+      background: transparent;
+      overflow: hidden;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+      pointer-events: auto;
+      cursor: grab;
+      touch-action: none;
+      user-select: none;
+    }
+
+    .mirror-overlay.keyed {
+      background-color: #141d2b;
+      background-image:
+        linear-gradient(45deg, rgba(255, 255, 255, 0.08) 25%, transparent 25%, transparent 75%, rgba(255, 255, 255, 0.08) 75%, rgba(255, 255, 255, 0.08)),
+        linear-gradient(45deg, rgba(255, 255, 255, 0.08) 25%, transparent 25%, transparent 75%, rgba(255, 255, 255, 0.08) 75%, rgba(255, 255, 255, 0.08));
+      background-size: 8px 8px;
+      background-position: 0 0, 4px 4px;
+    }
+
+    .mirror-overlay.dragging {
+      cursor: grabbing;
+      border-color: #7fdcff;
+    }
+
+    .mirror-overlay.resizing {
+      border-color: #ffc977;
+    }
+
+    .mirror-overlay.color-picking-target {
+      border-color: #8fdcff;
+      box-shadow: 0 0 0 1px rgba(143, 220, 255, 0.35), 0 2px 10px rgba(0, 0, 0, 0.45);
+    }
+
+    .viewport-wrap.color-picking-screen .mirror-overlay {
+      cursor: crosshair;
+    }
+
+    .viewport-wrap.color-picking-screen .mirror-overlay-resizer {
+      opacity: 0.45;
+      pointer-events: none;
+    }
+
+    .viewport-wrap.panning .mirror-overlay {
+      cursor: grabbing;
+    }
+
+    .mirror-overlay-canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      background: transparent;
+    }
+
+    .mirror-overlay-resizer {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      right: 2px;
+      bottom: 2px;
+      border: 1px solid #222;
+      border-radius: 2px;
+      background: rgba(255, 231, 180, 0.92);
+      box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.28);
+      cursor: nwse-resize;
+    }
+
+    .hint {
+      margin: 0;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.3;
+    }
+
+    code {
+      font: inherit;
+      color: #d8ebff;
+      background: #111823;
+      border: 1px solid #2f3b51;
+      border-radius: 3px;
+      padding: 0 3px;
+    }
+
+    @media (max-width: 1180px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+
+      .controls {
+        position: static;
+        max-height: none;
+      }
+
+      .viewport-wrap {
+        min-height: 300px;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .resolution-grid,
+      .mirror-grid,
+      .overlay-generator-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .action-row button {
+        flex: 1 1 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <aside class="controls">
+      <header class="panel-header">
+        <h1 class="panel-title">F3 Pie Web Editor</h1>
+        <div id="statusText" class="status"></div>
+      </header>
+
+      <section class="control-card">
+        <h2 class="card-title">Resolution & View</h2>
+        <div class="field-grid resolution-grid">
+          <label class="field" for="presetSelect">
+            Preset
+            <select id="presetSelect"></select>
+          </label>
+
+          <label class="field" for="guiScaleSelect">
+            GUI Scale
+            <select id="guiScaleSelect">
+              <option value="0">Auto</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+              <option value="6">6</option>
+              <option value="7">7</option>
+              <option value="8">8</option>
+            </select>
+          </label>
+
+          <label class="field" for="widthInput">
+            Width
+            <input id="widthInput" type="number" min="300" max="7680" step="1">
+          </label>
+
+          <label class="field" for="heightInput">
+            Height
+            <input id="heightInput" type="number" min="240" max="16384" step="1">
+          </label>
+        </div>
+
+        <div class="action-row">
+          <button id="applyResolution">Apply Resolution</button>
+        </div>
+
+        <div class="action-row">
+          <button id="wideButton" type="button">Wide</button>
+          <button id="thinButton" type="button">Thin</button>
+          <button id="tallButton" type="button">Tall</button>
+        </div>
+      </section>
+
+      <section class="control-card">
+        <div class="card-header-row">
+          <h2 class="card-title">Actions Settings</h2>
+          <button
+            id="actionsSettingsToggle"
+            class="card-collapse-toggle"
+            type="button"
+            aria-expanded="true"
+            aria-controls="actionsSettingsBody"
+          >▴</button>
+        </div>
+        <div id="actionsSettingsBody" class="keybind-grid collapsible-body">
+          <div class="keybind-row">
+            <span class="keybind-name">Open Ninjabrain Bot</span>
+            <div class="keybind-controls">
+              <span id="openNinjabrainKeybindValue" class="keybind-value">Unset</span>
+              <button id="openNinjabrainKeybindSet" type="button">Set</button>
+              <button id="openNinjabrainKeybindClear" type="button">Clear</button>
+            </div>
+          </div>
+          <div class="keybind-row">
+            <span class="keybind-name">Thin</span>
+            <div class="keybind-controls">
+              <span id="thinKeybindValue" class="keybind-value">Unset</span>
+              <button id="thinKeybindSet" type="button">Set</button>
+              <button id="thinKeybindClear" type="button">Clear</button>
+            </div>
+          </div>
+          <div class="keybind-row">
+            <span class="keybind-name">Wide</span>
+            <div class="keybind-controls">
+              <span id="wideKeybindValue" class="keybind-value">Unset</span>
+              <button id="wideKeybindSet" type="button">Set</button>
+              <button id="wideKeybindClear" type="button">Clear</button>
+            </div>
+          </div>
+          <div class="keybind-row">
+            <span class="keybind-name">Tall</span>
+            <div class="keybind-controls">
+              <span id="tallKeybindValue" class="keybind-value">Unset</span>
+              <button id="tallKeybindSet" type="button">Set</button>
+              <button id="tallKeybindClear" type="button">Clear</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="control-card">
+        <h2 class="card-title">Mirrors</h2>
+        <div class="field-grid mirror-grid">
+          <label class="field" for="mirrorXInput">
+            X
+            <input id="mirrorXInput" type="number" min="0" step="1">
+          </label>
+
+          <label class="field" for="mirrorYInput">
+            Y
+            <input id="mirrorYInput" type="number" min="0" step="1">
+          </label>
+
+          <label class="field" for="mirrorWInput">
+            W
+            <input id="mirrorWInput" type="number" min="1" step="1">
+          </label>
+
+          <label class="field" for="mirrorHInput">
+            H
+            <input id="mirrorHInput" type="number" min="1" step="1">
+          </label>
+        </div>
+
+        <div class="action-row">
+          <button id="selectMirrorButton" type="button">Pick Area</button>
+          <button id="addMirrorButton" type="button">Add From Fields</button>
+          <button id="clearMirrorsButton" type="button">Clear Mirrors</button>
+        </div>
+
+        <div class="selection-row">
+          <div id="mirrorSelectionStatus" class="mirror-selection-status">Area pick: off</div>
+        </div>
+        <div id="mirrorList" class="mirror-list"></div>
+        <div class="overlay-generator-grid">
+          <label class="field" for="overlayColorAInput">
+            Primary colour
+            <input id="overlayColorAInput" type="color" value="#00ff00">
+          </label>
+          <label class="field" for="overlayColorBInput">
+            Secondary colour
+            <input id="overlayColorBInput" type="color" value="#008800">
+          </label>
+          <label class="field" for="overlayTextColorInput">
+            Text colour
+            <input id="overlayTextColorInput" type="color" value="#ffffff">
+          </label>
+          <label class="field" for="overlayPixelCountInput">
+            Number of pixels
+            <input id="overlayPixelCountInput" type="number" min="1" max="50" step="1" value="9">
+          </label>
+          <label class="field" for="overlayPixelHeightInput">
+            Pixel height (%)
+            <input id="overlayPixelHeightInput" type="number" min="1" max="50" step="1" value="8">
+          </label>
+          <label class="field" for="overlayOpacityPixelsInput">
+            Opacity (pixels)
+            <input id="overlayOpacityPixelsInput" type="number" min="0" max="100" step="1" value="100">
+          </label>
+          <label class="field" for="overlayOpacityTextInput">
+            Opacity (text)
+            <input id="overlayOpacityTextInput" type="number" min="0" max="100" step="1" value="100">
+          </label>
+          <label class="field" for="overlayTextSizeInput">
+            Text size
+            <input id="overlayTextSizeInput" type="number" min="1" max="200" step="1" value="40">
+          </label>
+          <label class="field" for="overlayFontStyleSelect">
+            Font
+            <select id="overlayFontStyleSelect">
+              <option value="Inter-400">Inter</option>
+              <option value="Inter-700">Inter Bold</option>
+              <option value="Roboto-400">Roboto</option>
+              <option value="Roboto-700">Roboto Bold</option>
+              <option value="Roboto-400i">Roboto Italic</option>
+              <option value="Oswald-400">Oswald</option>
+              <option value="Oswald-700">Oswald Bold</option>
+              <option value="Montserrat-400">Montserrat</option>
+              <option value="Montserrat-700">Montserrat Bold</option>
+              <option value="Open Sans-400">Open Sans</option>
+              <option value="Lato-400">Lato</option>
+              <option value="JetBrains Mono-400">JetBrains Mono</option>
+              <option value="JetBrains Mono-700">JetBrains Mono Bold</option>
+              <option value="Poppins-400">Poppins</option>
+              <option value="Poppins-700">Poppins Bold</option>
+              <option value="Fira Code-400">Fira Code</option>
+              <option value="Fira Code-700">Fira Code Bold</option>
+              <option value="Source Sans Pro-400">Source Sans Pro</option>
+              <option value="Source Sans Pro-700">Source Sans Pro Bold</option>
+            </select>
+          </label>
+        </div>
+        <div class="action-row">
+          <button id="exportTallOverlayButton" type="button">Export Measuring Overlay</button>
+        </div>
+      </section>
+    </aside>
+
+    <section class="workspace">
+      <div class="workspace-toolbar">
+        <span class="workspace-title">Canvas</span>
+        <p class="hint">
+          Pie: <code>1..9</code> dive, <code>0</code> up · Zoom: buttons or <code>Ctrl + wheel</code> · Pan with middle-drag or wheel scroll in Tall view.
+        </p>
+      </div>
+
+      <section class="viewport-wrap" id="viewportWrap">
+        <canvas id="screenCanvas" width="1280" height="720"></canvas>
+        <canvas id="eyeMeasureOverlayCanvas" width="1280" height="720"></canvas>
+        <canvas id="eyeMeasureTextCanvas" width="1280" height="720"></canvas>
+        <div id="mirrorOverlayLayer" class="mirror-overlay-layer"></div>
+        <div id="mirrorSelectionBox" class="mirror-selection-box"></div>
+        <div class="zoom-controls">
+          <button id="zoomOutButton" type="button" title="Zoom out">-</button>
+          <span id="zoomLevelText" class="zoom-level">100%</span>
+          <button id="zoomInButton" type="button" title="Zoom in">+</button>
+          <button id="zoomResetButton" type="button" title="Reset zoom">Reset</button>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script src="public/background-data-uri.js"></script>
+  <script src="public/tall-data-uri.js"></script>
+  <script>
+    (() => {
+      const PRESETS = [
+        ["854 x 480", 854, 480],
+        ["960 x 540", 960, 540],
+        ["1280 x 720", 1280, 720],
+        ["1366 x 768", 1366, 768],
+        ["1600 x 900", 1600, 900],
+        ["1920 x 1080", 1920, 1080],
+        ["2560 x 1440", 2560, 1440],
+        ["3440 x 1440", 3440, 1440],
+        ["3840 x 2160", 3840, 2160]
+      ];
+
+      const DEFAULT_RESOLUTION = [1920, 1080];
+      const MIN_WIDTH = 300;
+      const MAX_WIDTH = 7680;
+      const MIN_HEIGHT = 240;
+      const MAX_HEIGHT = 16384;
+      const TALL_RESOLUTION = [384, 16384];
+      const MIRROR_VISIBLE_VARIANTS = new Set(["wide", "thin", "tall"]);
+      const FORCED_MODE = "f3pie";
+      const FORCED_FPS_CAP = 250;
+      const FORCED_BACKGROUND_URL = "public/background.png";
+      const FORCED_TALL_BACKGROUND_URL = "public/tall.png";
+      const FORCED_BACKGROUND_DATA_URL = window.__F3PIE_BG_DATA_URL__ || "";
+      const FORCED_TALL_BACKGROUND_DATA_URL = window.__F3PIE_TALL_BG_DATA_URL__ || "";
+      const MIRRORS_STORAGE_KEY = "f3pie.mirrors.v1";
+      const RESOLUTION_STORAGE_KEY = "f3pie.baseResolution.v1";
+      const ACTION_KEYBINDS_STORAGE_KEY = "f3pie.actionKeybinds.v1";
+      const TALL_OVERLAY_STORAGE_KEY = "f3pie.tallOverlay.v1";
+      const MAX_MIRROR_COLOR_KEYS = 10;
+      const MIRROR_KEY_TOLERANCE = 4;
+      const MIN_SCREEN_ZOOM = 1;
+      const MAX_SCREEN_ZOOM = 8;
+      const SCREEN_ZOOM_STEP = 0.25;
+      const EYE_PROJECTOR_SIZE = Object.freeze({ width: 60, height: 580 });
+      const TALL_PROJECTOR_HEIGHT_RATIO = 0.37;
+      const TALL_PROJECTOR_ASPECT = 1.75;
+      const MIRROR_POSITION_LIMIT = 5000;
+      const MIRROR_SIZE_LIMIT = 5000;
+      const MIRROR_MIN_SIZE = 0.5;
+      const DEFAULT_ACTION_KEYBINDS = Object.freeze({
+        openNinjabrain: "",
+        thin: "",
+        wide: "",
+        tall: ""
+      });
+      const DEFAULT_TALL_OVERLAY_SETTINGS = Object.freeze({
+        canvasWidth: 1920,
+        canvasHeight: 1080,
+        colorA: "#ffb0c5",
+        colorB: "#99cdf0",
+        textColor: "#000000",
+        pixelCount: 9,
+        pixelHeight: 8,
+        opacityPixels: 100,
+        opacityText: 100,
+        textSize: 40,
+        fontStyle: "Inter-400"
+      });
+      const ACTION_KEYS = Object.freeze({
+        openNinjabrain: "openNinjabrain",
+        thin: "thin",
+        wide: "wide",
+        tall: "tall"
+      });
+      const DEFAULT_PIE_PATH = ["root", "gameRenderer", "level", "entities"];
+      const PIE_COLOR_OVERRIDES = Object.freeze({
+        entities: 0xE446C4,
+        unspecified: 0x46CE66,
+        blockentities: 0xEC6E4E,
+        destroyentities: 0xCC6C46,
+        prepare: 0x111311
+      });
+
+      const PROFILER_TREE = {
+        name: "root",
+        children: [
+          {
+            name: "gameRenderer",
+            local: 100,
+            children: [
+              {
+                name: "level",
+                local: 100,
+                children: [
+                  {
+                    name: "entities",
+                    local: 100,
+                    children: [
+                      { name: "entities", local: 52.80 },
+                      { name: "blockentities", local: 19.60 },
+                      { name: "destroyentities", local: 16.20 },
+                      { name: "prepare", local: 11.40, hiddenOnPie: true }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      };
+
+      const state = {
+        mode: FORCED_MODE,
+        windowWidth: DEFAULT_RESOLUTION[0],
+        windowHeight: DEFAULT_RESOLUTION[1],
+        baseWidth: DEFAULT_RESOLUTION[0],
+        baseHeight: DEFAULT_RESOLUTION[1],
+        screenZoom: 1,
+        screenPanX: 0,
+        screenPanY: 0,
+        screenPanDrag: null,
+        zoomAnchorClientX: null,
+        zoomAnchorClientY: null,
+        viewportCropMode: "contain",
+        displayVariant: "preset",
+        guiScaleSetting: 0,
+        effectiveGuiScale: 1,
+        scaledWidth: DEFAULT_RESOLUTION[0],
+        scaledHeight: DEFAULT_RESOLUTION[1],
+        integratedServer: true,
+        showAltGraphs: false,
+        fpsCap: FORCED_FPS_CAP,
+        piePath: [...DEFAULT_PIE_PATH],
+        graphPushTimer: 0,
+        frameMsSamples: [],
+        tickMsSamples: [],
+        memUsedMb: 2680,
+        memAllocatedMb: 3880,
+        tickCount: 0,
+        lastPieHitboxes: [],
+        cameraX: 125.217,
+        cameraY: 67.000,
+        cameraZ: -302.683,
+        yaw: 180.0,
+        pitch: 3.0,
+        customBgImage: null,
+        customBgName: "",
+        customBgObjectUrl: "",
+        bgLoadError: false,
+        tallBgImage: null,
+        tallBgLoadError: false,
+        actionKeybinds: { ...DEFAULT_ACTION_KEYBINDS },
+        keybindCaptureAction: "",
+        tallOverlay: { ...DEFAULT_TALL_OVERLAY_SETTINGS },
+        mirrors: [],
+        mirrorSelectionMode: false,
+        mirrorSelectionDrag: null,
+        mirrorColorPick: null,
+        mirrorOverlayDrag: null,
+        mirrorOverlayResize: null,
+        suppressNextCanvasClick: false,
+        mirrorKeyingBlocked: false,
+        lastDevicePixelRatio: Math.max(1, window.devicePixelRatio || 1)
+      };
+
+      const canvas = document.getElementById("screenCanvas");
+      const ctx = canvas.getContext("2d", { alpha: false });
+      const eyeMeasureOverlayCanvas = document.getElementById("eyeMeasureOverlayCanvas");
+      const eyeOverlayCtx = eyeMeasureOverlayCanvas.getContext("2d");
+      const eyeMeasureTextCanvas = document.getElementById("eyeMeasureTextCanvas");
+      const eyeTextCtx = eyeMeasureTextCanvas.getContext("2d");
+      const viewportWrap = document.getElementById("viewportWrap");
+
+      const presetSelect = document.getElementById("presetSelect");
+      const widthInput = document.getElementById("widthInput");
+      const heightInput = document.getElementById("heightInput");
+      const applyResolutionButton = document.getElementById("applyResolution");
+      const guiScaleSelect = document.getElementById("guiScaleSelect");
+      const wideButton = document.getElementById("wideButton");
+      const thinButton = document.getElementById("thinButton");
+      const tallButton = document.getElementById("tallButton");
+      const actionsSettingsToggle = document.getElementById("actionsSettingsToggle");
+      const actionsSettingsBody = document.getElementById("actionsSettingsBody");
+      const openNinjabrainKeybindValue = document.getElementById("openNinjabrainKeybindValue");
+      const openNinjabrainKeybindSet = document.getElementById("openNinjabrainKeybindSet");
+      const openNinjabrainKeybindClear = document.getElementById("openNinjabrainKeybindClear");
+      const thinKeybindValue = document.getElementById("thinKeybindValue");
+      const thinKeybindSet = document.getElementById("thinKeybindSet");
+      const thinKeybindClear = document.getElementById("thinKeybindClear");
+      const wideKeybindValue = document.getElementById("wideKeybindValue");
+      const wideKeybindSet = document.getElementById("wideKeybindSet");
+      const wideKeybindClear = document.getElementById("wideKeybindClear");
+      const tallKeybindValue = document.getElementById("tallKeybindValue");
+      const tallKeybindSet = document.getElementById("tallKeybindSet");
+      const tallKeybindClear = document.getElementById("tallKeybindClear");
+      const overlayColorAInput = document.getElementById("overlayColorAInput");
+      const overlayColorBInput = document.getElementById("overlayColorBInput");
+      const overlayTextColorInput = document.getElementById("overlayTextColorInput");
+      const overlayPixelCountInput = document.getElementById("overlayPixelCountInput");
+      const overlayPixelHeightInput = document.getElementById("overlayPixelHeightInput");
+      const overlayOpacityPixelsInput = document.getElementById("overlayOpacityPixelsInput");
+      const overlayOpacityTextInput = document.getElementById("overlayOpacityTextInput");
+      const overlayTextSizeInput = document.getElementById("overlayTextSizeInput");
+      const overlayFontStyleSelect = document.getElementById("overlayFontStyleSelect");
+      const exportTallOverlayButton = document.getElementById("exportTallOverlayButton");
+      const zoomOutButton = document.getElementById("zoomOutButton");
+      const zoomInButton = document.getElementById("zoomInButton");
+      const zoomResetButton = document.getElementById("zoomResetButton");
+      const zoomLevelText = document.getElementById("zoomLevelText");
+      const mirrorXInput = document.getElementById("mirrorXInput");
+      const mirrorYInput = document.getElementById("mirrorYInput");
+      const mirrorWInput = document.getElementById("mirrorWInput");
+      const mirrorHInput = document.getElementById("mirrorHInput");
+      const selectMirrorButton = document.getElementById("selectMirrorButton");
+      const addMirrorButton = document.getElementById("addMirrorButton");
+      const clearMirrorsButton = document.getElementById("clearMirrorsButton");
+      const mirrorSelectionStatus = document.getElementById("mirrorSelectionStatus");
+      const mirrorList = document.getElementById("mirrorList");
+      const mirrorOverlayLayer = document.getElementById("mirrorOverlayLayer");
+      const mirrorSelectionBox = document.getElementById("mirrorSelectionBox");
+      const statusText = document.getElementById("statusText");
+      const mirrorOverlayContexts = new WeakMap();
+
+      ctx.imageSmoothingEnabled = false;
+      eyeOverlayCtx.imageSmoothingEnabled = false;
+      eyeTextCtx.imageSmoothingEnabled = true;
+      eyeTextCtx.imageSmoothingQuality = "high";
+
+      function deepClone(node) {
+        return {
+          name: node.name,
+          local: node.local,
+          hiddenOnPie: node.hiddenOnPie === true,
+          children: node.children ? node.children.map(deepClone) : undefined
+        };
+      }
+
+      function annotateGlobals(node, globalShare) {
+        node.global = globalShare;
+        if (!Array.isArray(node.children) || node.children.length === 0) {
+          return;
+        }
+        for (const child of node.children) {
+          const childGlobal = globalShare * (child.local / 100);
+          annotateGlobals(child, childGlobal);
+        }
+      }
+
+      const profilerRoot = deepClone(PROFILER_TREE);
+      profilerRoot.local = 100;
+      annotateGlobals(profilerRoot, 100);
+
+      function javaHash(str) {
+        let hash = 0;
+        for (let i = 0; i < str.length; i += 1) {
+          hash = ((hash * 31) + str.charCodeAt(i)) | 0;
+        }
+        return hash;
+      }
+
+      function colorFromProfilerName(name) {
+        const override = PIE_COLOR_OVERRIDES[name.toLowerCase()];
+        if (override !== undefined) {
+          return override;
+        }
+        const hash = javaHash(name);
+        const rgb = (((hash >>> 0) & 0xAAAAAA) + 4473924) & 0xFFFFFF;
+        return rgb;
+      }
+
+      function rgbIntToCss(rgb, alpha = 1) {
+        const r = (rgb >> 16) & 255;
+        const g = (rgb >> 8) & 255;
+        const b = rgb & 255;
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+      }
+
+      function fillResolutionPresetSelect() {
+        for (const preset of PRESETS) {
+          const option = document.createElement("option");
+          option.value = `${preset[1]}x${preset[2]}`;
+          option.textContent = preset[0];
+          presetSelect.appendChild(option);
+        }
+        const custom = document.createElement("option");
+        custom.value = "custom";
+        custom.textContent = "Custom";
+        presetSelect.appendChild(custom);
+      }
+
+      function clamp(value, min, max) {
+        return Math.max(min, Math.min(max, value));
+      }
+
+      function snapCssPixel(value) {
+        const dpr = Math.max(1, window.devicePixelRatio || 1);
+        return Math.round(value * dpr) / dpr;
+      }
+
+      function computeGuiScale(requested, width, height) {
+        const targetScale = requested === 0 ? 1000 : requested;
+        let scale = 1;
+        while (scale < targetScale && width / (scale + 1) >= 320 && height / (scale + 1) >= 240) {
+          scale += 1;
+        }
+        return scale;
+      }
+
+      function updateScaledResolution() {
+        state.effectiveGuiScale = computeGuiScale(state.guiScaleSetting, state.windowWidth, state.windowHeight);
+        state.scaledWidth = Math.floor(state.windowWidth / state.effectiveGuiScale);
+        state.scaledHeight = Math.floor(state.windowHeight / state.effectiveGuiScale);
+      }
+
+      function applyResolution(width, height) {
+        state.windowWidth = clamp(Math.floor(width), MIN_WIDTH, MAX_WIDTH);
+        state.windowHeight = clamp(Math.floor(height), MIN_HEIGHT, MAX_HEIGHT);
+
+        canvas.width = state.windowWidth;
+        canvas.height = state.windowHeight;
+        eyeMeasureOverlayCanvas.width = Math.max(1, state.windowWidth);
+        eyeMeasureOverlayCanvas.height = Math.max(1, state.windowHeight);
+        eyeMeasureTextCanvas.width = Math.max(1, state.windowWidth);
+        eyeMeasureTextCanvas.height = Math.max(1, state.windowHeight);
+
+        widthInput.value = String(state.windowWidth);
+        heightInput.value = String(state.windowHeight);
+
+        updateScaledResolution();
+        updateViewportLayout();
+        clampMirrorsAfterResolutionChange();
+      }
+
+      function saveBaseResolutionToStorage() {
+        try {
+          localStorage.setItem(RESOLUTION_STORAGE_KEY, JSON.stringify({
+            width: state.baseWidth,
+            height: state.baseHeight
+          }));
+        } catch (error) {
+          // Ignore storage errors (private mode/full quota).
+        }
+      }
+
+      function loadBaseResolutionFromStorage() {
+        try {
+          const raw = localStorage.getItem(RESOLUTION_STORAGE_KEY);
+          if (!raw) {
+            return null;
+          }
+          const parsed = JSON.parse(raw);
+          if (!parsed || typeof parsed !== "object") {
+            return null;
+          }
+          const width = clamp(Math.floor(Number(parsed.width)), MIN_WIDTH, MAX_WIDTH);
+          const height = clamp(Math.floor(Number(parsed.height)), MIN_HEIGHT, MAX_HEIGHT);
+          if (!Number.isFinite(width) || !Number.isFinite(height)) {
+            return null;
+          }
+          return { width, height };
+        } catch (error) {
+          return null;
+        }
+      }
+
+      function setBaseResolution(width, height, persist = false) {
+        state.baseWidth = clamp(Math.floor(width), MIN_WIDTH, MAX_WIDTH);
+        state.baseHeight = clamp(Math.floor(height), MIN_HEIGHT, MAX_HEIGHT);
+        syncTallOverlayCanvasSizeToBaseResolution(persist);
+        syncTallOverlayControls();
+        updateViewportLayout();
+        if (persist) {
+          saveBaseResolutionToStorage();
+        }
+      }
+
+      function setViewportCropMode(mode) {
+        state.viewportCropMode = mode === "crop" ? "crop" : "contain";
+        updateViewportLayout();
+      }
+
+      function normalizeActionKeybind(rawValue) {
+        if (typeof rawValue !== "string") {
+          return "";
+        }
+        return rawValue.trim();
+      }
+
+      function normalizeActionKeybinds(raw) {
+        const parsed = (raw && typeof raw === "object") ? raw : {};
+        return {
+          openNinjabrain: normalizeActionKeybind(parsed.openNinjabrain),
+          thin: normalizeActionKeybind(parsed.thin),
+          wide: normalizeActionKeybind(parsed.wide),
+          tall: normalizeActionKeybind(parsed.tall)
+        };
+      }
+
+      function loadActionKeybindsFromStorage() {
+        try {
+          const raw = localStorage.getItem(ACTION_KEYBINDS_STORAGE_KEY);
+          if (!raw) {
+            state.actionKeybinds = { ...DEFAULT_ACTION_KEYBINDS };
+            return;
+          }
+          state.actionKeybinds = normalizeActionKeybinds(JSON.parse(raw));
+        } catch (error) {
+          state.actionKeybinds = { ...DEFAULT_ACTION_KEYBINDS };
+        }
+      }
+
+      function saveActionKeybindsToStorage() {
+        try {
+          localStorage.setItem(ACTION_KEYBINDS_STORAGE_KEY, JSON.stringify(state.actionKeybinds));
+        } catch (error) {
+          // Ignore storage errors (private mode/full quota).
+        }
+      }
+
+      function formatKeybindLabel(code) {
+        if (!code) {
+          return "Unset";
+        }
+        if (code.startsWith("Key")) {
+          return code.slice(3).toUpperCase();
+        }
+        if (code.startsWith("Digit")) {
+          return code.slice(5);
+        }
+        if (code.startsWith("Numpad")) {
+          return `Num ${code.slice(6)}`;
+        }
+        const aliases = {
+          Space: "Space",
+          Escape: "Esc",
+          Backquote: "`",
+          Minus: "-",
+          Equal: "=",
+          BracketLeft: "[",
+          BracketRight: "]",
+          Semicolon: ";",
+          Quote: "'",
+          Comma: ",",
+          Period: ".",
+          Slash: "/",
+          Backslash: "\\"
+        };
+        return aliases[code] || code;
+      }
+
+      function updateActionKeybindUi() {
+        openNinjabrainKeybindValue.textContent = formatKeybindLabel(state.actionKeybinds.openNinjabrain);
+        thinKeybindValue.textContent = formatKeybindLabel(state.actionKeybinds.thin);
+        wideKeybindValue.textContent = formatKeybindLabel(state.actionKeybinds.wide);
+        tallKeybindValue.textContent = formatKeybindLabel(state.actionKeybinds.tall);
+
+        openNinjabrainKeybindSet.textContent =
+          state.keybindCaptureAction === ACTION_KEYS.openNinjabrain ? "Press key..." : "Set";
+        thinKeybindSet.textContent =
+          state.keybindCaptureAction === ACTION_KEYS.thin ? "Press key..." : "Set";
+        wideKeybindSet.textContent =
+          state.keybindCaptureAction === ACTION_KEYS.wide ? "Press key..." : "Set";
+        tallKeybindSet.textContent =
+          state.keybindCaptureAction === ACTION_KEYS.tall ? "Press key..." : "Set";
+      }
+
+      function setKeybindCaptureAction(actionKey) {
+        state.keybindCaptureAction = state.keybindCaptureAction === actionKey ? "" : actionKey;
+        updateActionKeybindUi();
+      }
+
+      function setActionKeybind(actionKey, code) {
+        state.actionKeybinds[actionKey] = normalizeActionKeybind(code);
+        saveActionKeybindsToStorage();
+        updateActionKeybindUi();
+      }
+
+      function clearActionKeybind(actionKey) {
+        setActionKeybind(actionKey, "");
+      }
+
+      function findActionForCode(code) {
+        if (!code) {
+          return "";
+        }
+        if (state.actionKeybinds.openNinjabrain === code) {
+          return ACTION_KEYS.openNinjabrain;
+        }
+        if (state.actionKeybinds.thin === code) {
+          return ACTION_KEYS.thin;
+        }
+        if (state.actionKeybinds.wide === code) {
+          return ACTION_KEYS.wide;
+        }
+        if (state.actionKeybinds.tall === code) {
+          return ACTION_KEYS.tall;
+        }
+        return "";
+      }
+
+      function runAction(actionKey) {
+        if (actionKey === ACTION_KEYS.openNinjabrain) {
+          return;
+        }
+        if (actionKey === ACTION_KEYS.wide) {
+          if (state.displayVariant === "wide") {
+            setDisplayVariant("preset");
+            setViewportCropMode("contain");
+            applyShortcutResolution(state.baseWidth, state.baseHeight);
+            return;
+          }
+          setDisplayVariant("wide");
+          setViewportCropMode("contain");
+          applyShortcutResolution(state.baseWidth, 300);
+          return;
+        }
+        if (actionKey === ACTION_KEYS.thin) {
+          if (state.displayVariant === "thin") {
+            setDisplayVariant("preset");
+            setViewportCropMode("contain");
+            applyShortcutResolution(state.baseWidth, state.baseHeight);
+            return;
+          }
+          setDisplayVariant("thin");
+          setViewportCropMode("contain");
+          applyShortcutResolution(350, state.baseHeight);
+          return;
+        }
+        if (actionKey === ACTION_KEYS.tall) {
+          if (state.displayVariant === "tall") {
+            setDisplayVariant("preset");
+            setViewportCropMode("contain");
+            applyShortcutResolution(state.baseWidth, state.baseHeight);
+            return;
+          }
+          setDisplayVariant("tall");
+          setViewportCropMode("crop");
+          applyShortcutResolution(TALL_RESOLUTION[0], TALL_RESOLUTION[1]);
+        }
+      }
+
+      function shouldIgnoreGlobalKeybind(event) {
+        const target = event.target;
+        if (!(target instanceof Element)) {
+          return false;
+        }
+        return Boolean(
+          target.closest("input, textarea, select") ||
+          target.closest("[contenteditable='true']")
+        );
+      }
+
+      function setCollapsibleState(toggle, body, expanded) {
+        const isExpanded = Boolean(expanded);
+        toggle.setAttribute("aria-expanded", isExpanded ? "true" : "false");
+        toggle.textContent = isExpanded ? "▴" : "▾";
+        body.hidden = !isExpanded;
+      }
+
+      function normalizeHexColor(rawValue, fallback) {
+        const value = typeof rawValue === "string" ? rawValue.trim() : "";
+        return /^#[0-9a-fA-F]{6}$/.test(value) ? value.toLowerCase() : fallback;
+      }
+
+      function normalizeTallOverlaySettings(raw) {
+        const parsed = (raw && typeof raw === "object") ? raw : {};
+        return {
+          canvasWidth: clamp(Math.floor(Number(parsed.canvasWidth) || DEFAULT_TALL_OVERLAY_SETTINGS.canvasWidth), 1, 16384),
+          canvasHeight: clamp(Math.floor(Number(parsed.canvasHeight) || DEFAULT_TALL_OVERLAY_SETTINGS.canvasHeight), 1, 16384),
+          colorA: normalizeHexColor(parsed.colorA, DEFAULT_TALL_OVERLAY_SETTINGS.colorA),
+          colorB: normalizeHexColor(parsed.colorB, DEFAULT_TALL_OVERLAY_SETTINGS.colorB),
+          textColor: normalizeHexColor(parsed.textColor, DEFAULT_TALL_OVERLAY_SETTINGS.textColor),
+          pixelCount: clamp(Math.floor(Number(parsed.pixelCount) || DEFAULT_TALL_OVERLAY_SETTINGS.pixelCount), 1, 50),
+          pixelHeight: clamp(Math.floor(Number(parsed.pixelHeight) || DEFAULT_TALL_OVERLAY_SETTINGS.pixelHeight), 1, 50),
+          opacityPixels: clamp(Math.floor(Number(parsed.opacityPixels) || DEFAULT_TALL_OVERLAY_SETTINGS.opacityPixels), 0, 100),
+          opacityText: clamp(Math.floor(Number(parsed.opacityText) || DEFAULT_TALL_OVERLAY_SETTINGS.opacityText), 0, 100),
+          textSize: clamp(Math.floor(Number(parsed.textSize) || DEFAULT_TALL_OVERLAY_SETTINGS.textSize), 1, 200),
+          fontStyle: typeof parsed.fontStyle === "string" && parsed.fontStyle ? parsed.fontStyle : DEFAULT_TALL_OVERLAY_SETTINGS.fontStyle
+        };
+      }
+
+      function loadTallOverlaySettingsFromStorage() {
+        try {
+          const raw = localStorage.getItem(TALL_OVERLAY_STORAGE_KEY);
+          if (!raw) {
+            state.tallOverlay = { ...DEFAULT_TALL_OVERLAY_SETTINGS };
+            return;
+          }
+          state.tallOverlay = normalizeTallOverlaySettings(JSON.parse(raw));
+        } catch (error) {
+          state.tallOverlay = { ...DEFAULT_TALL_OVERLAY_SETTINGS };
+        }
+      }
+
+      function saveTallOverlaySettingsToStorage() {
+        try {
+          localStorage.setItem(TALL_OVERLAY_STORAGE_KEY, JSON.stringify(state.tallOverlay));
+        } catch (error) {
+          // Ignore storage errors (private mode/full quota).
+        }
+      }
+
+      function syncTallOverlayControls() {
+        overlayColorAInput.value = state.tallOverlay.colorA;
+        overlayColorBInput.value = state.tallOverlay.colorB;
+        overlayTextColorInput.value = state.tallOverlay.textColor;
+        overlayPixelCountInput.value = String(state.tallOverlay.pixelCount);
+        overlayPixelHeightInput.value = String(state.tallOverlay.pixelHeight);
+        overlayOpacityPixelsInput.value = String(state.tallOverlay.opacityPixels);
+        overlayOpacityTextInput.value = String(state.tallOverlay.opacityText);
+        overlayTextSizeInput.value = String(state.tallOverlay.textSize);
+        overlayFontStyleSelect.value = state.tallOverlay.fontStyle;
+      }
+
+      function syncTallOverlayCanvasSizeToBaseResolution(persist = false) {
+        state.tallOverlay.canvasWidth = state.baseWidth;
+        state.tallOverlay.canvasHeight = state.baseHeight;
+        if (persist) {
+          saveTallOverlaySettingsToStorage();
+        }
+      }
+
+      function updateTallOverlayFromControls() {
+        state.tallOverlay = normalizeTallOverlaySettings({
+          canvasWidth: state.baseWidth,
+          canvasHeight: state.baseHeight,
+          colorA: overlayColorAInput.value,
+          colorB: overlayColorBInput.value,
+          textColor: overlayTextColorInput.value,
+          pixelCount: overlayPixelCountInput.value,
+          pixelHeight: overlayPixelHeightInput.value,
+          opacityPixels: overlayOpacityPixelsInput.value,
+          opacityText: overlayOpacityTextInput.value,
+          textSize: overlayTextSizeInput.value,
+          fontStyle: overlayFontStyleSelect.value
+        });
+        syncTallOverlayControls();
+        saveTallOverlaySettingsToStorage();
+      }
+
+      function renderOverlayGenToCanvas(targetCanvas, targetCtx, options = {}) {
+        const safeWidth = Math.max(1, targetCanvas.width);
+        const safeHeight = Math.max(1, targetCanvas.height);
+        const pixelCount = state.tallOverlay.pixelCount;
+        const pixelWidth = safeWidth / 60;
+        const pixelHeight = Math.max(1, Math.round((safeHeight * state.tallOverlay.pixelHeight) / 100));
+        const pixelY = Math.round((safeHeight / 2) - (pixelHeight / 2));
+        const [fontFamily, weightStyle] = state.tallOverlay.fontStyle.split("-");
+        let fontWeight = "400";
+        let fontStyle = "normal";
+        if (weightStyle && weightStyle.endsWith("i")) {
+          fontWeight = weightStyle.slice(0, -1);
+          fontStyle = "italic";
+        } else if (weightStyle) {
+          fontWeight = weightStyle;
+        }
+        const textSize = state.tallOverlay.textSize;
+        // Hack: on-screen tall overlay text needs a 4x downscale to match expected visual size.
+        const effectiveTextSize = options.overlayPreviewHack ? (textSize / 4) : textSize;
+        targetCtx.clearRect(0, 0, safeWidth, safeHeight);
+        targetCtx.globalAlpha = 0;
+        targetCtx.fillStyle = "#ffffff";
+        targetCtx.fillRect(0, 0, safeWidth, safeHeight);
+        targetCtx.globalAlpha = 1;
+
+        targetCtx.font = `${fontStyle} ${fontWeight} ${effectiveTextSize}px "${fontFamily || "Inter"}"`;
+        targetCtx.textAlign = "center";
+        targetCtx.textBaseline = "alphabetic";
+        for (let i = -pixelCount; i < pixelCount; i += 1) {
+          const pixelX = (safeWidth / 2) + (i * pixelWidth);
+          targetCtx.globalAlpha = state.tallOverlay.opacityPixels / 100;
+          targetCtx.fillStyle = (Math.abs(i % 2) === 1) ? state.tallOverlay.colorB : state.tallOverlay.colorA;
+          targetCtx.fillRect(pixelX, pixelY, pixelWidth, pixelHeight);
+
+          const labelNumber = i < 0 ? Math.abs(i) : i + 1;
+          targetCtx.globalAlpha = state.tallOverlay.opacityText / 100;
+          targetCtx.fillStyle = state.tallOverlay.textColor;
+          const metrics = targetCtx.measureText(String(labelNumber));
+          const textHeight = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
+          const textY = pixelY + (pixelHeight * 0.5) + metrics.actualBoundingBoxAscent - (textHeight * 0.5);
+          targetCtx.fillText(String(labelNumber), pixelX + (pixelWidth * 0.5), textY);
+        }
+
+        targetCtx.globalAlpha = 1;
+        const centerLineWidth = safeWidth * 0.003125;
+        targetCtx.fillStyle = "#e8e8e8";
+        targetCtx.fillRect(
+          (safeWidth / 2) - centerLineWidth,
+          0,
+          centerLineWidth,
+          safeHeight
+        );
+      }
+
+      function renderTallOverlayToContext(targetCanvas, targetCtx) {
+        renderOverlayGenToCanvas(targetCanvas, targetCtx);
+      }
+
+      function drawTallEyeOverlay() {
+        const show = state.displayVariant === "tall";
+        eyeMeasureOverlayCanvas.classList.toggle("hidden", !show);
+        eyeMeasureTextCanvas.classList.toggle("hidden", !show);
+        eyeOverlayCtx.clearRect(0, 0, eyeMeasureOverlayCanvas.width, eyeMeasureOverlayCanvas.height);
+        eyeTextCtx.clearRect(0, 0, eyeMeasureTextCanvas.width, eyeMeasureTextCanvas.height);
+        if (!show) {
+          return;
+        }
+        const sourceWidth = Math.min(EYE_PROJECTOR_SIZE.width, canvas.width);
+        const sourceHeight = Math.min(EYE_PROJECTOR_SIZE.height, canvas.height);
+        const sourceX = Math.floor((canvas.width - sourceWidth) * 0.5);
+        const sourceY = Math.floor((canvas.height - sourceHeight) * 0.5);
+        eyeOverlayCtx.imageSmoothingEnabled = false;
+        eyeOverlayCtx.drawImage(
+          canvas,
+          sourceX,
+          sourceY,
+          sourceWidth,
+          sourceHeight,
+          0,
+          0,
+          eyeMeasureOverlayCanvas.width,
+          eyeMeasureOverlayCanvas.height
+        );
+        eyeTextCtx.imageSmoothingEnabled = true;
+        eyeTextCtx.imageSmoothingQuality = "high";
+        renderOverlayGenToCanvas(eyeMeasureTextCanvas, eyeTextCtx, { overlayPreviewHack: true });
+      }
+
+      function exportTallOverlayImage() {
+        updateTallOverlayFromControls();
+        const exportCanvas = document.createElement("canvas");
+        exportCanvas.width = state.tallOverlay.canvasWidth;
+        exportCanvas.height = state.tallOverlay.canvasHeight;
+        const exportCtx = exportCanvas.getContext("2d");
+        exportCtx.imageSmoothingEnabled = true;
+        exportCtx.imageSmoothingQuality = "high";
+        renderTallOverlayToContext(exportCanvas, exportCtx);
+        const link = document.createElement("a");
+        link.href = exportCanvas.toDataURL("image/png");
+        link.download = `eyemeasure-overlay-${exportCanvas.width}x${exportCanvas.height}.png`;
+        link.click();
+      }
+
+      function updateZoomUi() {
+        const zoomPercent = Math.round(state.screenZoom * 100);
+        zoomLevelText.textContent = `${zoomPercent}%`;
+        zoomOutButton.disabled = state.screenZoom <= (MIN_SCREEN_ZOOM + 0.001);
+        zoomInButton.disabled = state.screenZoom >= (MAX_SCREEN_ZOOM - 0.001);
+        zoomResetButton.disabled = state.screenZoom <= (MIN_SCREEN_ZOOM + 0.001) &&
+          Math.abs(state.screenPanX) < 0.5 &&
+          Math.abs(state.screenPanY) < 0.5;
+      }
+
+      function computeDisplayMetrics(zoom) {
+        const safeWindowWidth = Math.max(1, state.windowWidth);
+        const safeWindowHeight = Math.max(1, state.windowHeight);
+        const containScale = Math.min(
+          1,
+          state.baseWidth / safeWindowWidth,
+          state.baseHeight / safeWindowHeight
+        );
+        const scale = state.viewportCropMode === "crop" ? 1 : containScale;
+        const unzoomedDisplayWidthPercent = (safeWindowWidth * scale * 100) / Math.max(1, state.baseWidth);
+        const unzoomedDisplayHeightPercent = (safeWindowHeight * scale * 100) / Math.max(1, state.baseHeight);
+        const displayWidthPercent = unzoomedDisplayWidthPercent * zoom;
+        const displayHeightPercent = unzoomedDisplayHeightPercent * zoom;
+        const viewportWidthPx = Math.max(1, viewportWrap.clientWidth || state.baseWidth);
+        const viewportHeightPx = Math.max(1, viewportWrap.clientHeight || state.baseHeight);
+        const displayWidthPx = viewportWidthPx * displayWidthPercent / 100;
+        const displayHeightPx = viewportHeightPx * displayHeightPercent / 100;
+        return {
+          displayWidthPercent,
+          displayHeightPercent,
+          viewportWidthPx,
+          viewportHeightPx,
+          displayWidthPx,
+          displayHeightPx
+        };
+      }
+
+      function getScreenPanLimits(zoom = state.screenZoom) {
+        const metrics = computeDisplayMetrics(zoom);
+        return {
+          maxPanX: Math.max(0, (metrics.displayWidthPx - metrics.viewportWidthPx) * 0.5),
+          maxPanY: Math.max(0, (metrics.displayHeightPx - metrics.viewportHeightPx) * 0.5)
+        };
+      }
+
+      function setScreenZoom(nextZoom, resetPan = false, anchorClientX = null, anchorClientY = null) {
+        const stepped = Math.round(nextZoom / SCREEN_ZOOM_STEP) * SCREEN_ZOOM_STEP;
+        const clampedZoom = clamp(stepped, MIN_SCREEN_ZOOM, MAX_SCREEN_ZOOM);
+        const unchanged = Math.abs(clampedZoom - state.screenZoom) < 0.001;
+        if (unchanged && !resetPan) {
+          return;
+        }
+
+        const prevMetrics = computeDisplayMetrics(state.screenZoom);
+        let nextPanX = state.screenPanX;
+        let nextPanY = state.screenPanY;
+
+        const hasAnchor = Number.isFinite(anchorClientX) && Number.isFinite(anchorClientY);
+        if (!resetPan && clampedZoom > MIN_SCREEN_ZOOM + 0.001 && hasAnchor) {
+          const bounds = viewportWrap.getBoundingClientRect();
+          const anchorX = clamp(anchorClientX - bounds.left, 0, Math.max(1, bounds.width));
+          const anchorY = clamp(anchorClientY - bounds.top, 0, Math.max(1, bounds.height));
+          const centerX = (prevMetrics.viewportWidthPx * 0.5) + state.screenPanX;
+          const centerY = (prevMetrics.viewportHeightPx * 0.5) + state.screenPanY;
+          const offsetX = anchorX - centerX;
+          const offsetY = anchorY - centerY;
+          const nextMetrics = computeDisplayMetrics(clampedZoom);
+          const ratioX = nextMetrics.displayWidthPx / Math.max(1, prevMetrics.displayWidthPx);
+          const ratioY = nextMetrics.displayHeightPx / Math.max(1, prevMetrics.displayHeightPx);
+          nextPanX = anchorX - (offsetX * ratioX) - (nextMetrics.viewportWidthPx * 0.5);
+          nextPanY = anchorY - (offsetY * ratioY) - (nextMetrics.viewportHeightPx * 0.5);
+        } else if (resetPan || clampedZoom <= MIN_SCREEN_ZOOM + 0.001) {
+          if (state.screenPanDrag) {
+            endScreenPanDrag();
+          }
+          nextPanX = 0;
+          nextPanY = 0;
+        }
+
+        state.screenZoom = clampedZoom;
+        state.screenPanX = nextPanX;
+        state.screenPanY = nextPanY;
+        updateViewportLayout();
+        updateStatusText();
+      }
+
+      function updateViewportLayout() {
+        viewportWrap.style.setProperty("--preview-base-width", `${state.baseWidth}px`);
+        viewportWrap.style.setProperty("--preview-aspect", `${state.baseWidth} / ${state.baseHeight}`);
+
+        const metrics = computeDisplayMetrics(state.screenZoom);
+        const safeWindowWidth = Math.max(1, state.windowWidth);
+        const safeWindowHeight = Math.max(1, state.windowHeight);
+        const scaleX = metrics.displayWidthPx / safeWindowWidth;
+        const scaleY = metrics.displayHeightPx / safeWindowHeight;
+        const displayScale = Math.min(scaleX, scaleY);
+        const dpr = Math.max(1, window.devicePixelRatio || 1);
+        const minCssPixel = 1 / dpr;
+        const displayWidthPx = Math.max(minCssPixel, snapCssPixel(safeWindowWidth * displayScale));
+        const displayHeightPx = Math.max(minCssPixel, snapCssPixel(safeWindowHeight * displayScale));
+        const overlayVisible = state.displayVariant === "tall";
+        const overlayGapPx = overlayVisible ? 10 : 0;
+        const centeredCanvasLeftPx = snapCssPixel((metrics.viewportWidthPx - displayWidthPx) * 0.5);
+        const targetOverlayHeightPx = overlayVisible
+          ? Math.max(minCssPixel, snapCssPixel(displayHeightPx * TALL_PROJECTOR_HEIGHT_RATIO))
+          : 0;
+        const targetOverlayWidthPx = overlayVisible
+          ? Math.max(minCssPixel, snapCssPixel(targetOverlayHeightPx * TALL_PROJECTOR_ASPECT))
+          : 0;
+        const availableLeftPx = Math.max(minCssPixel, snapCssPixel(centeredCanvasLeftPx - overlayGapPx));
+        const overlayDisplayWidthPx = overlayVisible
+          ? clamp(targetOverlayWidthPx, EYE_PROJECTOR_SIZE.width, availableLeftPx)
+          : 0;
+        const overlayDisplayHeightPx = overlayVisible
+          ? Math.max(minCssPixel, snapCssPixel(overlayDisplayWidthPx / TALL_PROJECTOR_ASPECT))
+          : 0;
+        const canvasLeftPx = overlayVisible
+          ? Math.max(centeredCanvasLeftPx, overlayDisplayWidthPx + overlayGapPx)
+          : centeredCanvasLeftPx;
+        const canvasTopPx = snapCssPixel((metrics.viewportHeightPx - displayHeightPx) * 0.5);
+        const overlayLeftPx = overlayVisible ? snapCssPixel(canvasLeftPx - overlayGapPx - overlayDisplayWidthPx) : canvasLeftPx;
+        const overlayTopPx = overlayVisible
+          ? snapCssPixel(canvasTopPx + ((displayHeightPx - overlayDisplayHeightPx) * 0.5))
+          : canvasTopPx;
+
+        viewportWrap.style.setProperty("--canvas-display-width", `${displayWidthPx}px`);
+        viewportWrap.style.setProperty("--canvas-display-height", `${displayHeightPx}px`);
+        viewportWrap.style.setProperty("--canvas-left", `${canvasLeftPx}px`);
+        viewportWrap.style.setProperty("--canvas-top", `${canvasTopPx}px`);
+        viewportWrap.style.setProperty("--overlay-display-width", `${overlayDisplayWidthPx}px`);
+        viewportWrap.style.setProperty("--overlay-display-height", `${overlayDisplayHeightPx}px`);
+        viewportWrap.style.setProperty("--overlay-left", `${overlayLeftPx}px`);
+        viewportWrap.style.setProperty("--overlay-top", `${overlayTopPx}px`);
+        canvas.style.imageRendering = "pixelated";
+
+        const overlayBufferWidth = Math.max(1, Math.round(overlayDisplayWidthPx));
+        const overlayBufferHeight = Math.max(1, Math.round(overlayDisplayHeightPx));
+        if (eyeMeasureOverlayCanvas.width !== overlayBufferWidth || eyeMeasureOverlayCanvas.height !== overlayBufferHeight) {
+          eyeMeasureOverlayCanvas.width = overlayBufferWidth;
+          eyeMeasureOverlayCanvas.height = overlayBufferHeight;
+        }
+        if (eyeMeasureTextCanvas.width !== overlayBufferWidth || eyeMeasureTextCanvas.height !== overlayBufferHeight) {
+          eyeMeasureTextCanvas.width = overlayBufferWidth;
+          eyeMeasureTextCanvas.height = overlayBufferHeight;
+          eyeTextCtx.imageSmoothingEnabled = true;
+          eyeTextCtx.imageSmoothingQuality = "high";
+        }
+
+        const { maxPanX, maxPanY } = getScreenPanLimits();
+
+        state.screenPanX = clamp(state.screenPanX, -maxPanX, maxPanX);
+        state.screenPanY = clamp(state.screenPanY, -maxPanY, maxPanY);
+
+        if (state.screenZoom <= MIN_SCREEN_ZOOM + 0.001 && maxPanX < 0.5 && maxPanY < 0.5) {
+          state.screenPanX = 0;
+          state.screenPanY = 0;
+        }
+
+        viewportWrap.style.setProperty("--canvas-pan-x", `${snapCssPixel(state.screenPanX)}px`);
+        viewportWrap.style.setProperty("--canvas-pan-y", `${snapCssPixel(state.screenPanY)}px`);
+        updateZoomUi();
+        renderMirrorOverlays();
+        drawMirrorOverlays();
+        updateMirrorSelectionBox();
+      }
+
+      function refreshViewportLayoutAndMirrors() {
+        updateViewportLayout();
+        renderMirrorOverlays();
+        updateMirrorSelectionBox();
+      }
+
+      function syncPresetFromResolution() {
+        const base = `${state.baseWidth}x${state.baseHeight}`;
+        const match = PRESETS.find((preset) => `${preset[1]}x${preset[2]}` === base);
+        presetSelect.value = match ? base : "custom";
+      }
+
+      function setDisplayVariant(variant) {
+        const next = (variant === "wide" || variant === "thin" || variant === "tall") ? variant : "preset";
+        state.displayVariant = next;
+      }
+
+      function mirrorsVisibleInCurrentMode() {
+        return MIRROR_VISIBLE_VARIANTS.has(state.displayVariant);
+      }
+
+      function normalizeMirrorVisibility(raw) {
+        return (raw === "wide" || raw === "thin" || raw === "tall" || raw === "all")
+          ? raw
+          : "all";
+      }
+
+      function visibilityForNewMirror() {
+        return MIRROR_VISIBLE_VARIANTS.has(state.displayVariant)
+          ? state.displayVariant
+          : "all";
+      }
+
+      function mirrorVisibleInVariant(mirror, variant = state.displayVariant) {
+        if (!mirror || typeof mirror !== "object") {
+          return false;
+        }
+        const visibility = normalizeMirrorVisibility(mirror.visibleIn);
+        return visibility === "all" || visibility === variant;
+      }
+
+      function getMirrorsForCurrentVariant() {
+        return state.mirrors.filter((mirror) => mirrorVisibleInVariant(mirror));
+      }
+
+      function parseMirrorNumber(value, fallback) {
+        const n = Number(value);
+        return Number.isFinite(n) ? n : fallback;
+      }
+
+      function normalizeColorKey(raw) {
+        if (typeof raw === "number" && Number.isFinite(raw)) {
+          const value = clamp(Math.round(raw), 0, 0xFFFFFF);
+          return `#${value.toString(16).padStart(6, "0")}`;
+        }
+        if (typeof raw !== "string") {
+          return null;
+        }
+        const trimmed = raw.trim();
+        if (!trimmed) {
+          return null;
+        }
+        const hex = trimmed.startsWith("#") ? trimmed.slice(1) : trimmed;
+        if (!/^[0-9a-fA-F]{6}$/.test(hex)) {
+          return null;
+        }
+        return `#${hex.toLowerCase()}`;
+      }
+
+      function normalizeMirrorKeys(rawKeys) {
+        if (!Array.isArray(rawKeys)) {
+          return [];
+        }
+        const keys = [];
+        const seen = new Set();
+        for (let i = 0; i < rawKeys.length; i += 1) {
+          const normalized = normalizeColorKey(rawKeys[i]);
+          if (!normalized || seen.has(normalized)) {
+            continue;
+          }
+          seen.add(normalized);
+          keys.push(normalized);
+          if (keys.length >= MAX_MIRROR_COLOR_KEYS) {
+            break;
+          }
+        }
+        return keys;
+      }
+
+      function mirrorKeysEqual(a, b) {
+        if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length) {
+          return false;
+        }
+        for (let i = 0; i < a.length; i += 1) {
+          if (a[i] !== b[i]) {
+            return false;
+          }
+        }
+        return true;
+      }
+
+      function colorKeyToRgbInt(key) {
+        if (typeof key !== "string" || key.length !== 7 || key[0] !== "#") {
+          return null;
+        }
+        const parsed = Number.parseInt(key.slice(1), 16);
+        return Number.isFinite(parsed) ? parsed : null;
+      }
+
+      function colorKeyToRgbTuple(key) {
+        const rgb = colorKeyToRgbInt(key);
+        if (rgb === null) {
+          return null;
+        }
+        return {
+          r: (rgb >> 16) & 255,
+          g: (rgb >> 8) & 255,
+          b: rgb & 255
+        };
+      }
+
+      function rgbToHex(r, g, b) {
+        return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
+      }
+
+      function makeMirrorId() {
+        return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+      }
+
+      function normalizeMirrorRect(raw) {
+        const maxW = Math.max(1, state.windowWidth);
+        const maxH = Math.max(1, state.windowHeight);
+        const x = clamp(Math.floor(parseMirrorNumber(raw.x, 0)), 0, maxW - 1);
+        const y = clamp(Math.floor(parseMirrorNumber(raw.y, 0)), 0, maxH - 1);
+        const w = clamp(Math.round(parseMirrorNumber(raw.w, 1)), 1, maxW - x);
+        const h = clamp(Math.round(parseMirrorNumber(raw.h, 1)), 1, maxH - y);
+        return { x, y, w, h };
+      }
+
+      function defaultMirrorPlacement(rect, index) {
+        const viewportW = Math.max(1, state.windowWidth);
+        const viewportH = Math.max(1, state.windowHeight);
+        const offset = index * 2.5;
+        const defaultW = (rect.w / viewportW) * 100;
+        const defaultH = (rect.h / viewportH) * 100;
+        const maxVisibleX = Math.max(0, 100 - defaultW);
+        const maxVisibleY = Math.max(0, 100 - defaultH);
+        const screenX = clamp(((rect.x / viewportW) * 100) + offset, 0, maxVisibleX);
+        const screenY = clamp(((rect.y / viewportH) * 100) + offset, 0, maxVisibleY);
+        return {
+          screenX,
+          screenY,
+          screenW: defaultW,
+          screenH: defaultH
+        };
+      }
+
+      function normalizeMirrorPlacement(raw, rect, index = 0) {
+        const fallback = defaultMirrorPlacement(rect, index);
+        const screenW = clamp(parseMirrorNumber(raw.screenW, fallback.screenW), MIRROR_MIN_SIZE, MIRROR_SIZE_LIMIT);
+        const screenH = clamp(parseMirrorNumber(raw.screenH, fallback.screenH), MIRROR_MIN_SIZE, MIRROR_SIZE_LIMIT);
+        const screenX = clamp(parseMirrorNumber(raw.screenX, fallback.screenX), -MIRROR_POSITION_LIMIT, MIRROR_POSITION_LIMIT);
+        const screenY = clamp(parseMirrorNumber(raw.screenY, fallback.screenY), -MIRROR_POSITION_LIMIT, MIRROR_POSITION_LIMIT);
+        return {
+          screenX,
+          screenY,
+          screenW,
+          screenH
+        };
+      }
+
+      function normalizeMirror(raw, index = 0) {
+        const rect = normalizeMirrorRect(raw);
+        const placement = normalizeMirrorPlacement(raw, rect, index);
+        return {
+          id: raw.id || makeMirrorId(),
+          x: rect.x,
+          y: rect.y,
+          w: rect.w,
+          h: rect.h,
+          screenX: placement.screenX,
+          screenY: placement.screenY,
+          screenW: placement.screenW,
+          screenH: placement.screenH,
+          visibleIn: normalizeMirrorVisibility(raw.visibleIn),
+          keys: normalizeMirrorKeys(raw.keys)
+        };
+      }
+
+      function normalizeStoredMirrorRect(raw) {
+        const maxW = Math.max(1, MAX_WIDTH);
+        const maxH = Math.max(1, MAX_HEIGHT);
+        const x = clamp(Math.floor(parseMirrorNumber(raw?.x, 0)), 0, maxW - 1);
+        const y = clamp(Math.floor(parseMirrorNumber(raw?.y, 0)), 0, maxH - 1);
+        const w = clamp(Math.round(parseMirrorNumber(raw?.w, 1)), 1, maxW - x);
+        const h = clamp(Math.round(parseMirrorNumber(raw?.h, 1)), 1, maxH - y);
+        return { x, y, w, h };
+      }
+
+      function setMirrorInputValues(rect) {
+        mirrorXInput.value = String(rect.x);
+        mirrorYInput.value = String(rect.y);
+        mirrorWInput.value = String(rect.w);
+        mirrorHInput.value = String(rect.h);
+      }
+
+      function getMirrorById(mirrorId) {
+        return state.mirrors.find((item) => item.id === mirrorId) || null;
+      }
+
+      function addMirrorColorKey(mirror, rawColor) {
+        const normalized = normalizeColorKey(rawColor);
+        console.log("[mirror-pick] addMirrorColorKey input", {
+          mirrorId: mirror?.id,
+          rawColor,
+          normalized,
+          existingKeys: Array.isArray(mirror?.keys) ? [...mirror.keys] : null
+        });
+        if (!normalized) {
+          console.log("[mirror-pick] addMirrorColorKey rejected: invalid color");
+          return false;
+        }
+        if (mirror.keys.includes(normalized)) {
+          console.log("[mirror-pick] addMirrorColorKey rejected: duplicate color", normalized);
+          return false;
+        }
+        if (mirror.keys.length >= MAX_MIRROR_COLOR_KEYS) {
+          console.log("[mirror-pick] addMirrorColorKey rejected: max keys reached");
+          return false;
+        }
+        mirror.keys = [...mirror.keys, normalized];
+        console.log("[mirror-pick] addMirrorColorKey success", { mirrorId: mirror.id, keys: [...mirror.keys] });
+        saveMirrorsToStorage();
+        renderMirrorPanels();
+        updateStatusText();
+        return true;
+      }
+
+      function sampleCanvasColor(x, y) {
+        console.log("[mirror-pick] sampleCanvasColor request", { x, y, canvasW: canvas.width, canvasH: canvas.height });
+        if (!Number.isFinite(x) || !Number.isFinite(y)) {
+          console.log("[mirror-pick] sampleCanvasColor rejected: non-finite coords");
+          return null;
+        }
+        const sx = Math.floor(x);
+        const sy = Math.floor(y);
+        if (sx < 0 || sy < 0 || sx >= canvas.width || sy >= canvas.height) {
+          console.log("[mirror-pick] sampleCanvasColor rejected: out of bounds", { sx, sy });
+          return null;
+        }
+        try {
+          const data = ctx.getImageData(sx, sy, 1, 1).data;
+          if (state.mirrorKeyingBlocked) {
+            state.mirrorKeyingBlocked = false;
+            updateStatusText();
+          }
+          const color = rgbToHex(data[0], data[1], data[2]);
+          console.log("[mirror-pick] sampleCanvasColor success", { sx, sy, color, rgba: [data[0], data[1], data[2], data[3]] });
+          return color;
+        } catch (error) {
+          console.log("[mirror-pick] sampleCanvasColor error", error);
+          if (!state.mirrorKeyingBlocked) {
+            state.mirrorKeyingBlocked = true;
+            updateStatusText();
+          }
+          return null;
+        }
+      }
+
+      function sampleMirrorSourceColorFromEvent(mirror, overlay, event) {
+        const bounds = overlay.getBoundingClientRect();
+        const width = Math.max(1, bounds.width);
+        const height = Math.max(1, bounds.height);
+        const ux = clamp((event.clientX - bounds.left) / width, 0, 1);
+        const uy = clamp((event.clientY - bounds.top) / height, 0, 1);
+        const rect = normalizeMirrorRect(mirror);
+        const px = rect.x + (ux * Math.max(0, rect.w - 1));
+        const py = rect.y + (uy * Math.max(0, rect.h - 1));
+        console.log("[mirror-pick] sampleMirrorSourceColorFromEvent", {
+          mirrorId: mirror?.id,
+          overlayBounds: { left: bounds.left, top: bounds.top, width, height },
+          ux,
+          uy,
+          rect,
+          sample: { px, py }
+        });
+        return sampleCanvasColor(px, py);
+      }
+
+      function sampleMirrorOverlayColorFromEvent(overlay, event) {
+        const overlayCanvas = overlay.querySelector(".mirror-overlay-canvas");
+        if (!overlayCanvas) {
+          return null;
+        }
+        const overlayCtx = getMirrorOverlayContext(overlayCanvas);
+        if (!overlayCtx) {
+          return null;
+        }
+        const bounds = overlay.getBoundingClientRect();
+        const width = Math.max(1, bounds.width);
+        const height = Math.max(1, bounds.height);
+        const ux = clamp((event.clientX - bounds.left) / width, 0, 1);
+        const uy = clamp((event.clientY - bounds.top) / height, 0, 1);
+        const sx = clamp(Math.floor(ux * Math.max(1, overlayCanvas.width - 1)), 0, Math.max(0, overlayCanvas.width - 1));
+        const sy = clamp(Math.floor(uy * Math.max(1, overlayCanvas.height - 1)), 0, Math.max(0, overlayCanvas.height - 1));
+        try {
+          const data = overlayCtx.getImageData(sx, sy, 1, 1).data;
+          if (data[3] === 0) {
+            console.log("[mirror-pick] sampleMirrorOverlayColorFromEvent transparent pixel", { sx, sy });
+            return null;
+          }
+          const color = rgbToHex(data[0], data[1], data[2]);
+          console.log("[mirror-pick] sampleMirrorOverlayColorFromEvent success", {
+            sx,
+            sy,
+            color,
+            rgba: [data[0], data[1], data[2], data[3]],
+            overlaySize: { w: overlayCanvas.width, h: overlayCanvas.height }
+          });
+          return color;
+        } catch (error) {
+          console.log("[mirror-pick] sampleMirrorOverlayColorFromEvent error", error);
+          return null;
+        }
+      }
+
+      function saveMirrorsToStorage() {
+        try {
+          const payload = state.mirrors.map(({ x, y, w, h, screenX, screenY, screenW, screenH, visibleIn, keys }) => ({
+            x, y, w, h, screenX, screenY, screenW, screenH, visibleIn, keys
+          }));
+          localStorage.setItem(MIRRORS_STORAGE_KEY, JSON.stringify(payload));
+        } catch (error) {
+          // Ignore storage errors (private mode/full quota).
+        }
+      }
+
+      function loadMirrorsFromStorage() {
+        try {
+          const raw = localStorage.getItem(MIRRORS_STORAGE_KEY);
+          if (!raw) {
+            state.mirrors = [];
+            return;
+          }
+          const parsed = JSON.parse(raw);
+          if (!Array.isArray(parsed)) {
+            state.mirrors = [];
+            return;
+          }
+          state.mirrors = parsed
+            .filter((item) => item && typeof item === "object")
+            .map((item, index) => {
+              if (mirrorVisibleInVariant(item)) {
+                return normalizeMirror(item, index);
+              }
+              const rect = normalizeStoredMirrorRect(item);
+              const placement = normalizeMirrorPlacement(item, rect, index);
+              return {
+                id: item.id || makeMirrorId(),
+                x: rect.x,
+                y: rect.y,
+                w: rect.w,
+                h: rect.h,
+                screenX: placement.screenX,
+                screenY: placement.screenY,
+                screenW: placement.screenW,
+                screenH: placement.screenH,
+                visibleIn: normalizeMirrorVisibility(item.visibleIn),
+                keys: normalizeMirrorKeys(item.keys)
+              };
+            });
+        } catch (error) {
+          state.mirrors = [];
+        }
+      }
+
+      function getMirrorOverlayContext(overlayCanvas) {
+        const cached = mirrorOverlayContexts.get(overlayCanvas);
+        if (cached) {
+          return cached;
+        }
+        const created = overlayCanvas.getContext("2d", { willReadFrequently: true });
+        if (!created) {
+          return null;
+        }
+        created.imageSmoothingEnabled = false;
+        mirrorOverlayContexts.set(overlayCanvas, created);
+        return created;
+      }
+
+      function getCanvasViewportMetrics() {
+        const canvasBounds = canvas.getBoundingClientRect();
+        const viewportBounds = viewportWrap.getBoundingClientRect();
+        return {
+          left: canvasBounds.left - viewportBounds.left,
+          top: canvasBounds.top - viewportBounds.top,
+          width: Math.max(1, canvasBounds.width),
+          height: Math.max(1, canvasBounds.height)
+        };
+      }
+
+      function renderMirrorOverlays() {
+        mirrorOverlayLayer.innerHTML = "";
+        const visibleMirrors = getMirrorsForCurrentVariant();
+        const canvasMetrics = getCanvasViewportMetrics();
+        const dpr = Math.max(1, window.devicePixelRatio || 1);
+        const minCssPixel = 1 / dpr;
+        const colorPickTargetId = state.mirrorColorPick
+          ? state.mirrorColorPick.mirrorId
+          : "";
+        for (let i = 0; i < visibleMirrors.length; i += 1) {
+          const mirror = visibleMirrors[i];
+          const overlay = document.createElement("div");
+          overlay.className = "mirror-overlay";
+          overlay.classList.toggle("keyed", Array.isArray(mirror.keys) && mirror.keys.length > 0);
+          overlay.classList.toggle("color-picking-target", colorPickTargetId === mirror.id);
+          overlay.dataset.mirrorId = mirror.id;
+          const leftPx = snapCssPixel(canvasMetrics.left + ((mirror.screenX / 100) * canvasMetrics.width));
+          const topPx = snapCssPixel(canvasMetrics.top + ((mirror.screenY / 100) * canvasMetrics.height));
+          const widthPx = Math.max(minCssPixel, snapCssPixel((mirror.screenW / 100) * canvasMetrics.width));
+          const heightPx = Math.max(minCssPixel, snapCssPixel((mirror.screenH / 100) * canvasMetrics.height));
+          overlay.style.left = `${leftPx}px`;
+          overlay.style.top = `${topPx}px`;
+          overlay.style.width = `${widthPx}px`;
+          overlay.style.height = `${heightPx}px`;
+
+          const overlayCanvas = document.createElement("canvas");
+          overlayCanvas.className = "mirror-overlay-canvas";
+          overlayCanvas.width = Math.max(1, mirror.w);
+          overlayCanvas.height = Math.max(1, mirror.h);
+          getMirrorOverlayContext(overlayCanvas);
+          overlay.appendChild(overlayCanvas);
+
+          const resizer = document.createElement("div");
+          resizer.className = "mirror-overlay-resizer";
+          overlay.appendChild(resizer);
+
+          mirrorOverlayLayer.appendChild(overlay);
+        }
+      }
+
+      function renderMirrorPanels() {
+        mirrorList.innerHTML = "";
+        const visibleMirrors = getMirrorsForCurrentVariant();
+
+        if (state.mirrorColorPick && !visibleMirrors.some((mirror) => mirror.id === state.mirrorColorPick.mirrorId)) {
+          state.mirrorColorPick = null;
+          updateMirrorSelectionStatus();
+        }
+
+        if (!visibleMirrors.length) {
+          const empty = document.createElement("div");
+          empty.className = "mirror-empty";
+          empty.textContent = state.mirrors.length ? "No mirrors in this view." : "No mirrors yet.";
+          mirrorList.appendChild(empty);
+          renderMirrorOverlays();
+          return;
+        }
+
+        for (let i = 0; i < visibleMirrors.length; i += 1) {
+          const mirror = visibleMirrors[i];
+          const row = document.createElement("div");
+          row.className = "mirror-item";
+
+          const main = document.createElement("div");
+          main.className = "mirror-main";
+
+          const label = document.createElement("span");
+          label.className = "mirror-label";
+          label.textContent =
+            `#${i + 1} src:${mirror.x},${mirror.y},${mirror.w}x${mirror.h} ` +
+            `pos:${mirror.screenX.toFixed(1)}%,${mirror.screenY.toFixed(1)}%`;
+          main.appendChild(label);
+
+          const actions = document.createElement("div");
+          actions.className = "mirror-actions";
+
+          const centerButton = document.createElement("button");
+          centerButton.type = "button";
+          centerButton.textContent = "Center";
+          centerButton.addEventListener("click", () => {
+            mirror.screenX = clamp((100 - mirror.screenW) * 0.5, -MIRROR_POSITION_LIMIT, MIRROR_POSITION_LIMIT);
+            mirror.screenY = clamp((100 - mirror.screenH) * 0.5, -MIRROR_POSITION_LIMIT, MIRROR_POSITION_LIMIT);
+            saveMirrorsToStorage();
+            renderMirrorPanels();
+            updateStatusText();
+          });
+          actions.appendChild(centerButton);
+
+          const removeButton = document.createElement("button");
+          removeButton.type = "button";
+          removeButton.textContent = "Remove";
+          removeButton.addEventListener("click", () => {
+            state.mirrors = state.mirrors.filter((item) => item.id !== mirror.id);
+            saveMirrorsToStorage();
+            renderMirrorPanels();
+            updateStatusText();
+          });
+          actions.appendChild(removeButton);
+          main.appendChild(actions);
+          row.appendChild(main);
+
+          const keyControls = document.createElement("div");
+          keyControls.className = "mirror-key-controls";
+
+          const keyInput = document.createElement("input");
+          keyInput.type = "color";
+          keyInput.value = mirror.keys[0] || "#00ff00";
+          keyInput.title = "Color key";
+          keyControls.appendChild(keyInput);
+
+          const addKeyButton = document.createElement("button");
+          addKeyButton.type = "button";
+          addKeyButton.textContent = "Add Key";
+          addKeyButton.disabled = mirror.keys.length >= MAX_MIRROR_COLOR_KEYS;
+          addKeyButton.addEventListener("click", () => {
+            addMirrorColorKey(mirror, keyInput.value);
+          });
+          keyControls.appendChild(addKeyButton);
+
+          const pickCanvasButton = document.createElement("button");
+          pickCanvasButton.type = "button";
+          pickCanvasButton.textContent = "Pick Canvas";
+          pickCanvasButton.addEventListener("click", () => {
+            setMirrorColorPickMode({ mirrorId: mirror.id });
+          });
+          keyControls.appendChild(pickCanvasButton);
+
+          const clearKeysButton = document.createElement("button");
+          clearKeysButton.type = "button";
+          clearKeysButton.textContent = "Clear Keys";
+          clearKeysButton.disabled = mirror.keys.length === 0;
+          clearKeysButton.addEventListener("click", () => {
+            if (!mirror.keys.length) {
+              return;
+            }
+            mirror.keys = [];
+            saveMirrorsToStorage();
+            renderMirrorPanels();
+            updateStatusText();
+          });
+          keyControls.appendChild(clearKeysButton);
+
+          const keyCount = document.createElement("span");
+          keyCount.className = "mirror-key-count";
+          keyCount.textContent = `${mirror.keys.length}/${MAX_MIRROR_COLOR_KEYS} keys`;
+          keyControls.appendChild(keyCount);
+
+          row.appendChild(keyControls);
+
+          if (mirror.keys.length) {
+            const keyList = document.createElement("div");
+            keyList.className = "mirror-key-list";
+
+            for (let keyIndex = 0; keyIndex < mirror.keys.length; keyIndex += 1) {
+              const key = mirror.keys[keyIndex];
+              const chip = document.createElement("span");
+              chip.className = "mirror-key-chip";
+
+              const swatch = document.createElement("span");
+              swatch.className = "mirror-key-swatch";
+              swatch.style.setProperty("--key-color", key);
+              chip.appendChild(swatch);
+
+              const text = document.createElement("span");
+              text.textContent = key.toUpperCase();
+              chip.appendChild(text);
+
+              const removeKeyButton = document.createElement("button");
+              removeKeyButton.type = "button";
+              removeKeyButton.className = "mirror-key-remove";
+              removeKeyButton.textContent = "x";
+              removeKeyButton.addEventListener("click", () => {
+                mirror.keys = mirror.keys.filter((_, idx) => idx !== keyIndex);
+                saveMirrorsToStorage();
+                renderMirrorPanels();
+                updateStatusText();
+              });
+              chip.appendChild(removeKeyButton);
+
+              keyList.appendChild(chip);
+            }
+            row.appendChild(keyList);
+          }
+
+          mirrorList.appendChild(row);
+        }
+
+        renderMirrorOverlays();
+        drawMirrorOverlays();
+      }
+
+      function applyMirrorColorKeys(overlayCtx, width, height, keys) {
+        if (!Array.isArray(keys) || !keys.length) {
+          return;
+        }
+        const keyColors = [];
+        const seen = new Set();
+        for (let i = 0; i < keys.length; i += 1) {
+          const tuple = colorKeyToRgbTuple(keys[i]);
+          if (tuple) {
+            const variants = [tuple];
+            for (let variantIndex = 0; variantIndex < variants.length; variantIndex += 1) {
+              const variant = variants[variantIndex];
+              const signature = `${variant.r},${variant.g},${variant.b}`;
+              if (seen.has(signature)) {
+                continue;
+              }
+              seen.add(signature);
+              keyColors.push(variant);
+            }
+          }
+        }
+        if (!keyColors.length) {
+          return;
+        }
+        try {
+          const imageData = overlayCtx.getImageData(0, 0, width, height);
+          const data = imageData.data;
+          for (let i = 0; i < data.length; i += 4) {
+            const r = data[i];
+            const g = data[i + 1];
+            const b = data[i + 2];
+            let matched = false;
+            for (let k = 0; k < keyColors.length; k += 1) {
+              const key = keyColors[k];
+              if (
+                Math.abs(key.r - r) <= MIRROR_KEY_TOLERANCE &&
+                Math.abs(key.g - g) <= MIRROR_KEY_TOLERANCE &&
+                Math.abs(key.b - b) <= MIRROR_KEY_TOLERANCE
+              ) {
+                matched = true;
+                break;
+              }
+            }
+            if (!matched) {
+              data[i + 3] = 0;
+            }
+          }
+          overlayCtx.putImageData(imageData, 0, 0);
+          if (state.mirrorKeyingBlocked) {
+            state.mirrorKeyingBlocked = false;
+            updateStatusText();
+          }
+        } catch (error) {
+          console.log("[mirror-pick] applyMirrorColorKeys error", error);
+          // Fail-safe: if keying cannot read pixels, don't leave the unkeyed image visible.
+          overlayCtx.clearRect(0, 0, width, height);
+          if (!state.mirrorKeyingBlocked) {
+            state.mirrorKeyingBlocked = true;
+            updateStatusText();
+          }
+        }
+      }
+
+      function drawMirrorOverlays() {
+        const visible = mirrorsVisibleInCurrentMode();
+        mirrorOverlayLayer.classList.toggle("hidden", !visible);
+        if (!visible || !state.mirrors.length) {
+          return;
+        }
+
+        const overlays = mirrorOverlayLayer.querySelectorAll(".mirror-overlay");
+        for (let i = 0; i < overlays.length; i += 1) {
+          const overlay = overlays[i];
+          const mirror = state.mirrors.find((item) => item.id === overlay.dataset.mirrorId);
+          if (!mirror) {
+            continue;
+          }
+          const overlayCanvas = overlay.querySelector(".mirror-overlay-canvas");
+          if (!overlayCanvas) {
+            continue;
+          }
+          const overlayCtx = getMirrorOverlayContext(overlayCanvas);
+          if (!overlayCtx) {
+            continue;
+          }
+          const rect = normalizeMirrorRect(mirror);
+          overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+          overlayCtx.drawImage(
+            canvas,
+            rect.x,
+            rect.y,
+            rect.w,
+            rect.h,
+            0,
+            0,
+            overlayCanvas.width,
+            overlayCanvas.height
+          );
+          applyMirrorColorKeys(overlayCtx, overlayCanvas.width, overlayCanvas.height, mirror.keys);
+        }
+      }
+
+      function addMirror(rect) {
+        const normalized = normalizeMirror({
+          ...rect,
+          visibleIn: visibilityForNewMirror()
+        }, state.mirrors.length);
+        state.mirrors.push(normalized);
+        setMirrorInputValues(normalized);
+        saveMirrorsToStorage();
+        renderMirrorPanels();
+        updateStatusText();
+      }
+
+      function clearAllMirrors() {
+        state.mirrors = [];
+        saveMirrorsToStorage();
+        renderMirrorPanels();
+        updateStatusText();
+      }
+
+      function clampMirrorsAfterResolutionChange() {
+        if (!state.mirrors.length) {
+          return;
+        }
+        let changed = false;
+        state.mirrors = state.mirrors.map((mirror, index) => {
+          if (!mirrorVisibleInVariant(mirror)) {
+            const normalizedVisibility = normalizeMirrorVisibility(mirror.visibleIn);
+            const mirrorKeys = Array.isArray(mirror.keys) ? mirror.keys : [];
+            const normalizedKeys = normalizeMirrorKeys(mirror.keys);
+            const normalized = {
+              ...mirror,
+              id: mirror.id || makeMirrorId(),
+              visibleIn: normalizedVisibility,
+              keys: normalizedKeys
+            };
+            if (
+              normalized.id !== mirror.id ||
+              normalized.visibleIn !== mirror.visibleIn ||
+              !mirrorKeysEqual(normalized.keys, mirrorKeys)
+            ) {
+              changed = true;
+            }
+            return normalized;
+          }
+
+          const normalized = normalizeMirror(mirror, index);
+          const mirrorKeys = Array.isArray(mirror.keys) ? mirror.keys : [];
+          if (
+            normalized.x !== mirror.x ||
+            normalized.y !== mirror.y ||
+            normalized.w !== mirror.w ||
+            normalized.h !== mirror.h ||
+            normalized.screenX !== mirror.screenX ||
+            normalized.screenY !== mirror.screenY ||
+            normalized.screenW !== mirror.screenW ||
+            normalized.screenH !== mirror.screenH ||
+            normalized.visibleIn !== normalizeMirrorVisibility(mirror.visibleIn) ||
+            !mirrorKeysEqual(normalized.keys, mirrorKeys)
+          ) {
+            changed = true;
+          }
+          return normalized;
+        });
+        if (changed) {
+          saveMirrorsToStorage();
+          renderMirrorPanels();
+        }
+      }
+
+      function startScreenPanDrag(event) {
+        const { maxPanX, maxPanY } = getScreenPanLimits();
+        const canPan = maxPanX > 0.5 || maxPanY > 0.5;
+        if (event.button !== 1 || !canPan) {
+          return false;
+        }
+        if (
+          state.mirrorSelectionMode ||
+          state.mirrorSelectionDrag ||
+          state.mirrorColorPick ||
+          state.mirrorOverlayDrag ||
+          state.mirrorOverlayResize
+        ) {
+          return false;
+        }
+        state.screenPanDrag = {
+          startClientX: event.clientX,
+          startClientY: event.clientY,
+          startPanX: state.screenPanX,
+          startPanY: state.screenPanY
+        };
+        viewportWrap.classList.add("panning");
+        return true;
+      }
+
+      function updateScreenPanDrag(event) {
+        if (!state.screenPanDrag) {
+          return;
+        }
+        const drag = state.screenPanDrag;
+        state.screenPanX = drag.startPanX + (event.clientX - drag.startClientX);
+        state.screenPanY = drag.startPanY + (event.clientY - drag.startClientY);
+        updateViewportLayout();
+      }
+
+      function endScreenPanDrag() {
+        if (!state.screenPanDrag) {
+          return;
+        }
+        state.screenPanDrag = null;
+        viewportWrap.classList.remove("panning");
+        updateStatusText();
+      }
+
+      function setMirrorColorPickMode(nextMode) {
+        let normalized = null;
+        if (nextMode && typeof nextMode === "object") {
+          const mirror = getMirrorById(nextMode.mirrorId);
+          if (mirror) {
+            normalized = {
+              mirrorId: mirror.id
+            };
+          }
+        }
+
+        state.mirrorColorPick = normalized;
+
+        if (normalized) {
+          state.mirrorSelectionMode = false;
+          state.mirrorSelectionDrag = null;
+          if (state.screenPanDrag) {
+            endScreenPanDrag();
+          }
+          if (state.mirrorOverlayDrag) {
+            endMirrorOverlayDrag();
+          }
+          if (state.mirrorOverlayResize) {
+            endMirrorOverlayResize();
+          }
+        }
+
+        updateMirrorSelectionStatus();
+        updateMirrorSelectionBox();
+        renderMirrorOverlays();
+      }
+
+      function updateMirrorSelectionStatus() {
+        const selectionActive = state.mirrorSelectionMode;
+        const colorPick = state.mirrorColorPick;
+        const colorPickActive = Boolean(colorPick);
+
+        if (selectionActive) {
+          mirrorSelectionStatus.textContent = "Area pick: drag on canvas (Esc to cancel)";
+        } else if (colorPickActive) {
+          mirrorSelectionStatus.textContent = "Color pick: click anywhere on canvas (Esc to cancel)";
+        } else {
+          mirrorSelectionStatus.textContent = "Area pick: off";
+        }
+
+        mirrorSelectionStatus.classList.toggle("active", selectionActive || colorPickActive);
+        selectMirrorButton.textContent = selectionActive ? "Cancel Area Pick" : "Pick Area";
+        viewportWrap.classList.toggle("mirror-selecting", selectionActive);
+        viewportWrap.classList.toggle("color-picking-screen", colorPickActive);
+        mirrorOverlayLayer.style.pointerEvents = selectionActive ? "none" : "";
+      }
+
+      function getCanvasPointerPosition(event, clampToCanvas = true) {
+        const bounds = canvas.getBoundingClientRect();
+        const px = ((event.clientX - bounds.left) / Math.max(1, bounds.width)) * canvas.width;
+        const py = ((event.clientY - bounds.top) / Math.max(1, bounds.height)) * canvas.height;
+        if (!clampToCanvas) {
+          return { x: px, y: py };
+        }
+        return {
+          x: clamp(px, 0, canvas.width),
+          y: clamp(py, 0, canvas.height)
+        };
+      }
+
+      function updateMirrorSelectionBox() {
+        if (!state.mirrorSelectionDrag) {
+          mirrorSelectionBox.classList.remove("active");
+          return;
+        }
+        const bounds = canvas.getBoundingClientRect();
+        const viewportBounds = viewportWrap.getBoundingClientRect();
+        const start = state.mirrorSelectionDrag.start;
+        const current = state.mirrorSelectionDrag.current;
+        const leftPx = (Math.min(start.x, current.x) * bounds.width / Math.max(1, canvas.width)) + (bounds.left - viewportBounds.left);
+        const topPx = (Math.min(start.y, current.y) * bounds.height / Math.max(1, canvas.height)) + (bounds.top - viewportBounds.top);
+        const rightPx = (Math.max(start.x, current.x) * bounds.width / Math.max(1, canvas.width)) + (bounds.left - viewportBounds.left);
+        const bottomPx = (Math.max(start.y, current.y) * bounds.height / Math.max(1, canvas.height)) + (bounds.top - viewportBounds.top);
+
+        mirrorSelectionBox.style.left = `${Math.round(leftPx)}px`;
+        mirrorSelectionBox.style.top = `${Math.round(topPx)}px`;
+        mirrorSelectionBox.style.width = `${Math.max(1, Math.round(rightPx - leftPx))}px`;
+        mirrorSelectionBox.style.height = `${Math.max(1, Math.round(bottomPx - topPx))}px`;
+        mirrorSelectionBox.classList.add("active");
+      }
+
+      function setMirrorSelectionMode(enabled) {
+        if (enabled && state.mirrorColorPick) {
+          state.mirrorColorPick = null;
+        }
+        state.mirrorSelectionMode = enabled;
+        if (!enabled) {
+          state.mirrorSelectionDrag = null;
+          if (state.screenPanDrag) {
+            endScreenPanDrag();
+          }
+        } else if (state.mirrorOverlayDrag) {
+          endMirrorOverlayDrag();
+        } else if (state.mirrorOverlayResize) {
+          endMirrorOverlayResize();
+        }
+        updateMirrorSelectionStatus();
+        updateMirrorSelectionBox();
+        renderMirrorOverlays();
+      }
+
+      function finalizeMirrorSelection() {
+        if (!state.mirrorSelectionDrag) {
+          return;
+        }
+        const start = state.mirrorSelectionDrag.start;
+        const current = state.mirrorSelectionDrag.current;
+        const left = clamp(Math.floor(Math.min(start.x, current.x)), 0, Math.max(0, canvas.width - 1));
+        const top = clamp(Math.floor(Math.min(start.y, current.y)), 0, Math.max(0, canvas.height - 1));
+        const right = clamp(Math.ceil(Math.max(start.x, current.x)), left + 1, canvas.width);
+        const bottom = clamp(Math.ceil(Math.max(start.y, current.y)), top + 1, canvas.height);
+        const rect = normalizeMirrorRect({
+          x: left,
+          y: top,
+          w: right - left,
+          h: bottom - top
+        });
+        addMirror(rect);
+      }
+
+      function startMirrorOverlayDrag(event, overlay) {
+        if (state.mirrorSelectionMode || state.mirrorColorPick || event.button !== 0) {
+          return;
+        }
+        const mirrorId = overlay.dataset.mirrorId;
+        const mirror = state.mirrors.find((item) => item.id === mirrorId);
+        if (!mirror) {
+          return;
+        }
+        state.mirrorOverlayDrag = {
+          mirrorId,
+          startClientX: event.clientX,
+          startClientY: event.clientY,
+          startX: mirror.screenX,
+          startY: mirror.screenY
+        };
+        overlay.classList.add("dragging");
+        event.preventDefault();
+      }
+
+      function startMirrorOverlayResize(event, overlay) {
+        if (state.mirrorSelectionMode || state.mirrorColorPick || event.button !== 0) {
+          return;
+        }
+        const mirrorId = overlay.dataset.mirrorId;
+        const mirror = state.mirrors.find((item) => item.id === mirrorId);
+        if (!mirror) {
+          return;
+        }
+        state.mirrorOverlayResize = {
+          mirrorId,
+          startClientX: event.clientX,
+          startClientY: event.clientY,
+          startW: mirror.screenW,
+          startH: mirror.screenH,
+          aspectRatio: mirror.screenW / Math.max(0.001, mirror.screenH)
+        };
+        overlay.classList.add("resizing");
+        event.preventDefault();
+      }
+
+      function updateMirrorOverlayDrag(event) {
+        if (!state.mirrorOverlayDrag) {
+          return;
+        }
+        const drag = state.mirrorOverlayDrag;
+        const mirror = state.mirrors.find((item) => item.id === drag.mirrorId);
+        if (!mirror) {
+          return;
+        }
+        const canvasMetrics = getCanvasViewportMetrics();
+        const dxPct = ((event.clientX - drag.startClientX) / canvasMetrics.width) * 100;
+        const dyPct = ((event.clientY - drag.startClientY) / canvasMetrics.height) * 100;
+        mirror.screenX = clamp(drag.startX + dxPct, -MIRROR_POSITION_LIMIT, MIRROR_POSITION_LIMIT);
+        mirror.screenY = clamp(drag.startY + dyPct, -MIRROR_POSITION_LIMIT, MIRROR_POSITION_LIMIT);
+        renderMirrorOverlays();
+        event.preventDefault();
+      }
+
+      function endMirrorOverlayDrag() {
+        if (!state.mirrorOverlayDrag) {
+          return;
+        }
+        state.mirrorOverlayDrag = null;
+        const dragging = mirrorOverlayLayer.querySelector(".mirror-overlay.dragging");
+        if (dragging) {
+          dragging.classList.remove("dragging");
+        }
+        saveMirrorsToStorage();
+        renderMirrorPanels();
+      }
+
+      function updateMirrorOverlayResize(event) {
+        if (!state.mirrorOverlayResize) {
+          return;
+        }
+        const resize = state.mirrorOverlayResize;
+        const mirror = state.mirrors.find((item) => item.id === resize.mirrorId);
+        if (!mirror) {
+          return;
+        }
+        const canvasMetrics = getCanvasViewportMetrics();
+        const dxPct = ((event.clientX - resize.startClientX) / canvasMetrics.width) * 100;
+        const dyPct = ((event.clientY - resize.startClientY) / canvasMetrics.height) * 100;
+        if (event.shiftKey) {
+          mirror.screenW = clamp(resize.startW + dxPct, MIRROR_MIN_SIZE, MIRROR_SIZE_LIMIT);
+          mirror.screenH = clamp(resize.startH + dyPct, MIRROR_MIN_SIZE, MIRROR_SIZE_LIMIT);
+        } else {
+          const ratio = Math.max(0.001, resize.aspectRatio || (resize.startW / Math.max(0.001, resize.startH)));
+          const widthDeltaNorm = dxPct / Math.max(1, resize.startW);
+          const heightDeltaNorm = dyPct / Math.max(1, resize.startH);
+          const driveByWidth = Math.abs(widthDeltaNorm) >= Math.abs(heightDeltaNorm);
+
+          if (driveByWidth) {
+            const nextW = clamp(resize.startW + dxPct, MIRROR_MIN_SIZE, MIRROR_SIZE_LIMIT);
+            const nextH = clamp(nextW / ratio, MIRROR_MIN_SIZE, MIRROR_SIZE_LIMIT);
+            mirror.screenW = nextW;
+            mirror.screenH = nextH;
+          } else {
+            const nextH = clamp(resize.startH + dyPct, MIRROR_MIN_SIZE, MIRROR_SIZE_LIMIT);
+            const nextW = clamp(nextH * ratio, MIRROR_MIN_SIZE, MIRROR_SIZE_LIMIT);
+            mirror.screenW = nextW;
+            mirror.screenH = nextH;
+          }
+        }
+        renderMirrorOverlays();
+        event.preventDefault();
+      }
+
+      function endMirrorOverlayResize() {
+        if (!state.mirrorOverlayResize) {
+          return;
+        }
+        state.mirrorOverlayResize = null;
+        const resizing = mirrorOverlayLayer.querySelector(".mirror-overlay.resizing");
+        if (resizing) {
+          resizing.classList.remove("resizing");
+        }
+        saveMirrorsToStorage();
+        renderMirrorPanels();
+      }
+
+      function pushGraphSamples(dtMs) {
+        state.graphPushTimer += dtMs;
+        const pushStep = 50;
+        while (state.graphPushTimer >= pushStep) {
+          state.graphPushTimer -= pushStep;
+
+          const fpsTarget = state.fpsCap === 0 ? 230 : state.fpsCap;
+          const baseFrameMs = 1000 / fpsTarget;
+          const wobble = (Math.random() - 0.5) * 5.5;
+          const occasionalSpike = Math.random() < 0.035 ? (7 + Math.random() * 20) : 0;
+          const frameMs = clamp(baseFrameMs + wobble + occasionalSpike, 1, 90);
+          state.frameMsSamples.push(frameMs);
+
+          const tickBase = 50;
+          const tickWobble = (Math.random() - 0.5) * 8.0;
+          const tickSpike = Math.random() < 0.04 ? (8 + Math.random() * 20) : 0;
+          const tickMs = clamp(tickBase + tickWobble + tickSpike, 20, 120);
+          state.tickMsSamples.push(tickMs);
+
+          const maxSamples = 420;
+          if (state.frameMsSamples.length > maxSamples) {
+            state.frameMsSamples.splice(0, state.frameMsSamples.length - maxSamples);
+          }
+          if (state.tickMsSamples.length > maxSamples) {
+            state.tickMsSamples.splice(0, state.tickMsSamples.length - maxSamples);
+          }
+        }
+      }
+
+      function randomizeSamples() {
+        state.frameMsSamples.length = 0;
+        state.tickMsSamples.length = 0;
+        for (let i = 0; i < 300; i += 1) {
+          const fpsTarget = state.fpsCap === 0 ? 230 : state.fpsCap;
+          const frameMs = clamp((1000 / fpsTarget) + (Math.random() - 0.5) * 6 + (Math.random() < 0.04 ? 20 : 0), 1, 95);
+          const tickMs = clamp(50 + (Math.random() - 0.5) * 8 + (Math.random() < 0.05 ? 24 : 0), 20, 120);
+          state.frameMsSamples.push(frameMs);
+          state.tickMsSamples.push(tickMs);
+        }
+      }
+
+      function drawShadowText(text, x, y, color, shadowColor = null) {
+        if (shadowColor) {
+          ctx.fillStyle = shadowColor;
+          ctx.fillText(text, x, y + 1);
+        }
+        ctx.fillStyle = color;
+        ctx.fillText(text, x, y);
+      }
+
+      function drawTextBoxLine(text, x, y, alignRight = false, color = "#DDDDDD") {
+        if (!text) {
+          return;
+        }
+        const measured = Math.ceil(ctx.measureText(text).width);
+        const drawX = alignRight ? x - measured : x;
+        ctx.fillStyle = "rgba(80, 80, 80, 0.56)";
+        ctx.fillRect(drawX - 1, y - 1, measured + 2, 9);
+        drawShadowText(text, drawX, y, color);
+      }
+
+      function avg(arr) {
+        if (!arr.length) {
+          return 0;
+        }
+        return arr.reduce((acc, value) => acc + value, 0) / arr.length;
+      }
+
+      function formatPercent(value) {
+        return `${value.toFixed(2)}%`;
+      }
+
+      function getCurrentProfilerNode() {
+        let node = profilerRoot;
+        for (let i = 1; i < state.piePath.length; i += 1) {
+          const next = node.children?.find((child) => child.name === state.piePath[i]);
+          if (!next) {
+            break;
+          }
+          node = next;
+        }
+        return node;
+      }
+
+      function getProfilerDisplayEntries() {
+        const node = getCurrentProfilerNode();
+        const children = Array.isArray(node.children)
+          ? node.children.filter((child) => !child.hiddenOnPie)
+          : [];
+        children.sort((a, b) => {
+          if (b.local !== a.local) {
+            return b.local - a.local;
+          }
+          return a.name.localeCompare(b.name);
+        });
+
+        const consumed = children.reduce((sum, child) => sum + child.local, 0);
+        if (consumed < 100) {
+          children.push({
+            name: "unspecified",
+            local: 100 - consumed,
+            global: node.global * ((100 - consumed) / 100),
+            children: []
+          });
+        }
+
+        return {
+          rootEntry: {
+            name: state.piePath.join("."),
+            local: 100,
+            global: node.global
+          },
+          children
+        };
+      }
+
+      function drawCustomBackground() {
+        const image = state.displayVariant === "tall"
+          ? state.tallBgImage
+          : state.customBgImage;
+        if (!image) {
+          return false;
+        }
+
+        const w = state.windowWidth;
+        const h = state.windowHeight;
+        const imageAspect = image.width / image.height;
+        const screenAspect = w / h;
+        let drawW;
+        let drawH;
+        let drawX;
+        let drawY;
+
+        if (imageAspect > screenAspect) {
+          drawH = h;
+          drawW = h * imageAspect;
+          drawX = (w - drawW) / 2;
+          drawY = 0;
+        } else {
+          drawW = w;
+          drawH = w / imageAspect;
+          drawX = 0;
+          drawY = (h - drawH) / 2;
+        }
+
+        ctx.drawImage(image, drawX, drawY, drawW, drawH);
+
+        // Slight darken to preserve debug-text readability.
+        ctx.fillStyle = "rgba(0, 0, 0, 0.14)";
+        ctx.fillRect(0, 0, w, h);
+        return true;
+      }
+
+      function drawWorldBackdrop(nowMs) {
+        if (drawCustomBackground()) {
+          return;
+        }
+
+        const w = state.windowWidth;
+        const h = state.windowHeight;
+        const t = nowMs * 0.00012;
+
+        const sky = ctx.createLinearGradient(0, 0, 0, h);
+        sky.addColorStop(0, "#86b7ff");
+        sky.addColorStop(0.58, "#b2d2ff");
+        sky.addColorStop(1, "#9dd09d");
+        ctx.fillStyle = sky;
+        ctx.fillRect(0, 0, w, h);
+
+        const sunX = w * 0.74 + Math.cos(t * 0.12) * 14;
+        const sunY = h * 0.16;
+        ctx.fillStyle = "rgba(255, 240, 174, 0.92)";
+        ctx.fillRect(Math.round(sunX), Math.round(sunY), 34, 34);
+
+        ctx.fillStyle = "rgba(90, 128, 92, 0.58)";
+        for (let i = 0; i < 12; i += 1) {
+          const px = Math.round(((i * 331) % (w + 180)) - 90);
+          const pw = 130 + ((i * 17) % 110);
+          const ph = 40 + ((i * 33) % 90);
+          const py = h * 0.62 + (i % 4) * 16;
+          ctx.fillRect(px, Math.round(py), pw, ph);
+        }
+
+        const groundY = Math.floor(h * 0.75);
+        const dirt = ctx.createLinearGradient(0, groundY, 0, h);
+        dirt.addColorStop(0, "#6a6c39");
+        dirt.addColorStop(1, "#3d2d1f");
+        ctx.fillStyle = dirt;
+        ctx.fillRect(0, groundY, w, h - groundY);
+
+        ctx.fillStyle = "rgba(20, 20, 20, 0.35)";
+        for (let y = groundY; y < h; y += 8) {
+          ctx.fillRect(0, y, w, 1);
+        }
+
+        const vignette = ctx.createRadialGradient(w * 0.5, h * 0.35, h * 0.2, w * 0.5, h * 0.5, h * 0.9);
+        vignette.addColorStop(0, "rgba(0,0,0,0.00)");
+        vignette.addColorStop(1, "rgba(0,0,0,0.35)");
+        ctx.fillStyle = vignette;
+        ctx.fillRect(0, 0, w, h);
+      }
+
+      function lineForFacing() {
+        return "Facing: north (Towards negative Z) (180.0 / 3.0)";
+      }
+
+      function getF3LeftLines() {
+        const avgFrameMs = avg(state.frameMsSamples) || (1000 / 60);
+        const fps = clamp(Math.round(1000 / avgFrameMs), 1, 999);
+        const fpsTarget = state.fpsCap === 0 ? "inf" : String(state.fpsCap);
+        const tx = 14 + Math.round(Math.sin(state.tickCount * 0.006) * 4);
+        const rx = 12 + Math.round(Math.cos(state.tickCount * 0.005) * 3);
+        const pieVisible = state.mode === "pie" || state.mode === "f3pie";
+
+        state.cameraX += Math.sin(state.tickCount * 0.00035) * 0.0025;
+        state.cameraZ += Math.cos(state.tickCount * 0.00031) * 0.0022;
+
+        return [
+          "Minecraft 1.16.5 (1.16.5/vanilla)",
+          `${fps} fps T: ${fpsTarget}${state.fpsCap === 0 ? "" : ""} fancy-clouds B: 24`,
+          `Integrated server @ 50 ms ticks, ${tx} tx, ${rx} rx`,
+          "C: 676/1536 (s) D: 12, pC: 000, pU: 0, aB: 29",
+          "E: 14/111, B: 0, I: 66",
+          "P: 123. T: 101",
+          "Client Chunk Cache: 1024, 289",
+          "ServerChunkCache: 2025",
+          "minecraft:overworld FC: 58",
+          "",
+          `XYZ: ${state.cameraX.toFixed(3)} / ${state.cameraY.toFixed(5)} / ${state.cameraZ.toFixed(3)}`,
+          `Block: ${Math.floor(state.cameraX)} ${Math.floor(state.cameraY)} ${Math.floor(state.cameraZ)}`,
+          `Chunk: ${Math.floor(state.cameraX) & 15} ${Math.floor(state.cameraY) & 15} ${Math.floor(state.cameraZ) & 15} in ${Math.floor(state.cameraX) >> 4} ${Math.floor(state.cameraY) >> 4} ${Math.floor(state.cameraZ) >> 4}`,
+          lineForFacing(),
+          "Client Light: 15 (15 sky, 0 block)",
+          "Server Light: (15 sky, 0 block)",
+          "CH SW: 0 S: 0 OW: 0 O: 0 M: 0 ML: 0",
+          "SH SW: 0 S: 0 OW: 0 O: 0 M: 0 ML: 0",
+          "Biome: minecraft:plains",
+          "Local Difficulty: 1.50 // 0.00 (Day 12)",
+          "SC: 289, M:0, C: 12, A: 0, W: 0, W: 0, M:0",
+          "Sounds: 0/248 + 0/8 (Mood 0%)",
+          "",
+          `Debug: Pie [shift]: ${pieVisible ? "visible" : "hidden"} ${state.integratedServer ? "FPS + TPS" : "FPS"} [alt]: ${state.showAltGraphs ? "visible" : "hidden"}`,
+          "For help: press F3 + Q"
+        ];
+      }
+
+      function getF3RightLines() {
+        const maxMem = 8192;
+        state.memAllocatedMb += Math.sin(state.tickCount * 0.0021) * 0.7;
+        state.memUsedMb += Math.sin(state.tickCount * 0.0034) * 0.9;
+        state.memAllocatedMb = clamp(state.memAllocatedMb, 3200, 4900);
+        state.memUsedMb = clamp(state.memUsedMb, 1800, state.memAllocatedMb - 120);
+
+        const usedPercent = Math.floor((state.memUsedMb * 100) / maxMem);
+        const allocPercent = Math.floor((state.memAllocatedMb * 100) / maxMem);
+
+        return [
+          "Java: 17.0.10 64bit",
+          `Mem: ${String(usedPercent).padStart(2, " ")}% ${String(Math.floor(state.memUsedMb)).padStart(3, "0")}/${String(maxMem).padStart(3, "0")}MB`,
+          `Allocated: ${String(allocPercent).padStart(2, " ")}% ${String(Math.floor(state.memAllocatedMb)).padStart(3, "0")}MB`,
+          "",
+          `CPU: ${navigator.hardwareConcurrency || 8}x AMD Ryzen (simulated)`,
+          "",
+          `Display: ${state.windowWidth}x${state.windowHeight} (NVIDIA Corporation)`,
+          "NVIDIA GeForce RTX 3070/PCIe/SSE2",
+          "4.6.0 NVIDIA 555.85",
+          "",
+          "Targeted Block: 125, 66, -303",
+          "minecraft:stone",
+          "axis: y",
+          "#minecraft:mineable/pickaxe",
+          "",
+          "Targeted Fluid: 125, 66, -303",
+          "minecraft:empty",
+          "",
+          "MCSR Sodium 2.4.1",
+        ];
+      }
+
+      function lerp(a, b, t) {
+        return a + (b - a) * t;
+      }
+
+      function colorRamp(value, middle, max) {
+        const v = clamp(value, 0, max);
+        if (v < middle) {
+          const t = v / Math.max(1, middle);
+          const r = Math.round(lerp(0, 255, t));
+          const g = 255;
+          return `rgb(${r},${g},0)`;
+        }
+        const t = (v - middle) / Math.max(1, max - middle);
+        const r = 255;
+        const g = Math.round(lerp(255, 0, t));
+        return `rgb(${r},${g},0)`;
+      }
+
+      function drawVerticalLine(x, y1, y2, color) {
+        ctx.fillStyle = color;
+        const top = Math.min(y1, y2);
+        const h = Math.abs(y2 - y1) + 1;
+        ctx.fillRect(Math.round(x), Math.round(top), 1, Math.round(h));
+      }
+
+      function drawHorizontalLine(x1, x2, y, color) {
+        ctx.fillStyle = color;
+        const left = Math.min(x1, x2);
+        const w = Math.abs(x2 - x1) + 1;
+        ctx.fillRect(Math.round(left), Math.round(y), Math.round(w), 1);
+      }
+
+      function drawFrameGraph(samples, left, width, fpsMode) {
+        const bottom = state.scaledHeight;
+        const graphHeight = 60;
+        const sampleCount = Math.min(samples.length, Math.max(1, width));
+        const startIndex = Math.max(0, samples.length - sampleCount);
+        const visible = samples.slice(startIndex);
+
+        ctx.fillStyle = "rgba(80, 80, 80, 0.56)";
+        ctx.fillRect(left, bottom - graphHeight, sampleCount, graphHeight);
+
+        let min = Number.POSITIVE_INFINITY;
+        let max = Number.NEGATIVE_INFINITY;
+        let sum = 0;
+
+        for (let i = 0; i < visible.length; i += 1) {
+          const ms = visible[i];
+          min = Math.min(min, ms);
+          max = Math.max(max, ms);
+          sum += ms;
+
+          const frameHeight = clamp(Math.round(ms), 1, graphHeight);
+          const color = fpsMode ? colorRamp(frameHeight, 50, 100) : colorRamp(frameHeight, 30, 60);
+          drawVerticalLine(left + i, bottom, bottom - frameHeight, color);
+        }
+
+        if (fpsMode) {
+          drawTextBoxLine("60 FPS", left + 2, bottom - 30 + 2, false);
+          drawTextBoxLine("30 FPS", left + 2, bottom - 60 + 2, false);
+          drawHorizontalLine(left, left + sampleCount - 1, bottom - 30, "#ffffff");
+          drawHorizontalLine(left, left + sampleCount - 1, bottom - 60, "#ffffff");
+        } else {
+          drawTextBoxLine("20 TPS", left + 2, bottom - 60 + 2, false);
+          drawHorizontalLine(left, left + sampleCount - 1, bottom - 60, "#ffffff");
+        }
+
+        drawHorizontalLine(left, left + sampleCount - 1, bottom - 1, "#ffffff");
+        drawVerticalLine(left, bottom - 60, bottom, "#ffffff");
+        drawVerticalLine(left + sampleCount - 1, bottom - 60, bottom, "#ffffff");
+
+        const avgMs = sum / Math.max(1, visible.length);
+        const minLabel = `${Math.round(min)} ms min`;
+        const avgLabel = `${Math.round(avgMs)} ms avg`;
+        const maxLabel = `${Math.round(max)} ms max`;
+
+        drawShadowText(minLabel, left + 2, bottom - 69, "#e0e0e0");
+        drawShadowText(avgLabel, left + Math.floor(sampleCount / 2 - ctx.measureText(avgLabel).width / 2), bottom - 69, "#e0e0e0");
+        drawShadowText(maxLabel, left + sampleCount - ctx.measureText(maxLabel).width, bottom - 69, "#e0e0e0");
+      }
+
+      function drawF3Screen() {
+        ctx.save();
+        ctx.scale(state.effectiveGuiScale, state.effectiveGuiScale);
+        ctx.font = "8px 'Minecraftia', 'Courier New', monospace";
+        ctx.textBaseline = "top";
+
+        const leftLines = getF3LeftLines();
+        const rightLines = getF3RightLines();
+
+        for (let i = 0; i < leftLines.length; i += 1) {
+          const text = leftLines[i];
+          if (!text) {
+            continue;
+          }
+          const y = 2 + (9 * i);
+          drawTextBoxLine(text, 2, y, false);
+        }
+
+        for (let i = 0; i < rightLines.length; i += 1) {
+          const text = rightLines[i];
+          if (!text) {
+            continue;
+          }
+          const y = 2 + (9 * i);
+          drawTextBoxLine(text, state.scaledWidth - 2, y, true);
+        }
+
+        if (state.showAltGraphs) {
+          const leftWidth = Math.floor(state.scaledWidth / 2);
+          drawFrameGraph(state.frameMsSamples, 0, leftWidth, true);
+          if (state.integratedServer) {
+            const rightLeft = state.scaledWidth - Math.min(leftWidth, 240);
+            drawFrameGraph(state.tickMsSamples, rightLeft, leftWidth, false);
+          }
+        }
+
+        ctx.restore();
+      }
+
+      function drawPieSectorTop(centerX, centerY, radiusX, radiusY, startPercent, segmentPercent, color) {
+        const steps = Math.ceil(segmentPercent / 4.0) + 1;
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        for (let i = steps; i >= 0; i -= 1) {
+          const angle = (startPercent + (segmentPercent * i / steps)) * Math.PI * 2 / 100;
+          const x = centerX + (Math.cos(angle) * radiusX);
+          const y = centerY - (Math.sin(angle) * radiusY);
+          ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.fillStyle = color;
+        ctx.fill();
+      }
+
+      function drawPieSectorSide(centerX, centerY, radiusX, radiusY, startPercent, segmentPercent, color, depth) {
+        const steps = Math.ceil(segmentPercent / 4.0) + 1;
+        const points = [];
+        for (let i = steps; i >= 0; i -= 1) {
+          const angle = (startPercent + (segmentPercent * i / steps)) * Math.PI * 2 / 100;
+          const x = centerX + (Math.cos(angle) * radiusX);
+          const y = centerY - (Math.sin(angle) * radiusY);
+          if (y >= centerY) {
+            points.push({ x, y });
+          }
+        }
+        if (points.length < 2) {
+          return;
+        }
+        for (let i = 0; i < points.length - 1; i += 1) {
+          const a = points[i];
+          const b = points[i + 1];
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(a.x, a.y + depth);
+          ctx.lineTo(b.x, b.y + depth);
+          ctx.lineTo(b.x, b.y);
+          ctx.closePath();
+          ctx.fillStyle = color;
+          ctx.fill();
+        }
+      }
+
+      function drawPieScreen() {
+        ctx.save();
+        ctx.font = "8px 'Minecraftia', 'Courier New', monospace";
+        ctx.textBaseline = "top";
+
+        const display = getProfilerDisplayEntries();
+        const rootEntry = display.rootEntry;
+        const entries = display.children;
+
+        // Match vanilla behavior: piechart is drawn in framebuffer coordinates
+        // and does not scale with GUI scale.
+        const radiusX = 160;
+        const radiusY = 80;
+        const depth = 10;
+        const centerX = state.windowWidth - 160 - 10;
+        const centerY = state.windowHeight - 320;
+        const panelHalfWidth = 176;
+        const panelTopOffset = 96 + 16;
+        const panelHeight = 416;
+        const textHalfWidth = 160;
+        const headingY = centerY - 96;
+        const legendStartY = centerY + 80 + 20;
+        const localPercentInset = 50;
+
+        let currentPercent = 0;
+        for (const entry of entries) {
+          const colorInt = colorFromProfilerName(entry.name);
+          const sideColorInt = ((colorInt >> 1) & 0x7F7F7F);
+          drawPieSectorTop(centerX, centerY, radiusX, radiusY, currentPercent, entry.local, rgbIntToCss(colorInt));
+          drawPieSectorSide(centerX, centerY, radiusX, radiusY, currentPercent, entry.local, rgbIntToCss(sideColorInt), depth);
+          currentPercent += entry.local;
+        }
+
+        const headingRaw = rootEntry.name;
+        let heading = "";
+        if (headingRaw !== "unspecified") {
+          heading += "[0] ";
+        }
+        if (!headingRaw) {
+          heading += "ROOT ";
+        } else {
+          heading += `${headingRaw} `;
+        }
+
+        drawShadowText(heading, centerX - textHalfWidth, headingY, "#ffffff", "#000000");
+        const rootPercentText = formatPercent(rootEntry.global);
+        drawShadowText(rootPercentText, centerX + textHalfWidth - ctx.measureText(rootPercentText).width, headingY, "#ffffff", "#000000");
+
+        state.lastPieHitboxes = [];
+        for (let i = 0; i < entries.length; i += 1) {
+          const entry = entries[i];
+          const lineY = legendStartY + (i * 8);
+          const colorInt = colorFromProfilerName(entry.name);
+          const color = rgbIntToCss(colorInt);
+          const marker = entry.name === "unspecified" ? "[?]" : `[${i + 1}]`;
+          const leftText = `${marker} ${entry.name}`;
+          const localText = formatPercent(entry.local);
+          const globalText = formatPercent(entry.global);
+
+          drawShadowText(leftText, centerX - textHalfWidth, lineY, color, "#000000");
+          drawShadowText(localText, centerX + textHalfWidth - localPercentInset - ctx.measureText(localText).width, lineY, color, "#000000");
+          drawShadowText(globalText, centerX + textHalfWidth - ctx.measureText(globalText).width, lineY, color, "#000000");
+
+          state.lastPieHitboxes.push({
+            index: i,
+            x: centerX - textHalfWidth,
+            y: lineY,
+            w: textHalfWidth * 2,
+            h: 8,
+            entry
+          });
+        }
+
+        ctx.restore();
+      }
+
+      function navigatePie(index) {
+        const display = getProfilerDisplayEntries();
+        const entries = display.children;
+        if (index === 0) {
+          if (state.piePath.length > 1) {
+            state.piePath.pop();
+          }
+          return;
+        }
+
+        const childIndex = index - 1;
+        if (childIndex < 0 || childIndex >= entries.length) {
+          return;
+        }
+        const child = entries[childIndex];
+        if (!child || child.name === "unspecified") {
+          return;
+        }
+        const current = getCurrentProfilerNode();
+        const target = current.children?.find((item) => item.name === child.name);
+        if (target) {
+          state.piePath.push(target.name);
+        }
+      }
+
+      function draw(nowMs) {
+        drawWorldBackdrop(nowMs);
+
+        if (state.mode === "pie") {
+          drawPieScreen();
+        } else if (state.mode === "f3pie") {
+          drawF3Screen();
+          drawPieScreen();
+        } else {
+          drawF3Screen();
+        }
+      }
+
+      function updateStatusText() {
+        const autoSuffix = state.guiScaleSetting === 0 ? " (Auto)" : "";
+        const fpsTargetText = String(state.fpsCap);
+        const backgroundText = state.displayVariant === "tall"
+          ? (state.tallBgImage ? FORCED_TALL_BACKGROUND_URL : (state.tallBgLoadError ? `missing (${FORCED_TALL_BACKGROUND_URL})` : "loading"))
+          : (state.customBgImage ? state.customBgName : (state.bgLoadError ? `missing (${FORCED_BACKGROUND_URL})` : "loading"));
+        const keyingText = state.mirrorKeyingBlocked ? "blocked" : "active";
+        const zoomText = `${Math.round(state.screenZoom * 100)}%`;
+        const visibleMirrors = getMirrorsForCurrentVariant().length;
+        statusText.textContent =
+          `Window ${state.windowWidth}x${state.windowHeight} | GUI Scale ${state.effectiveGuiScale}${autoSuffix} | ` +
+          `Scaled GUI ${state.scaledWidth}x${state.scaledHeight} | Screen: ${state.mode.toUpperCase()} | FPS Target: ${fpsTargetText} | BG: ${backgroundText} | Keying: ${keyingText} | Zoom: ${zoomText} | View: ${state.displayVariant} | Mirrors: ${visibleMirrors}/${state.mirrors.length}`;
+      }
+
+      function applyControlValuesToState() {
+        state.mode = FORCED_MODE;
+        state.guiScaleSetting = Number(guiScaleSelect.value);
+        state.fpsCap = FORCED_FPS_CAP;
+        updateScaledResolution();
+        updateStatusText();
+      }
+
+      function onApplyResolutionClick() {
+        setDisplayVariant("preset");
+        setViewportCropMode("contain");
+        applyResolution(Number(widthInput.value), Number(heightInput.value));
+        setBaseResolution(state.windowWidth, state.windowHeight, true);
+        syncPresetFromResolution();
+        applyControlValuesToState();
+        renderMirrorPanels();
+      }
+
+      function applyShortcutResolution(width, height) {
+        applyResolution(width, height);
+        syncPresetFromResolution();
+        applyControlValuesToState();
+        renderMirrorPanels();
+      }
+
+      function setCustomBackgroundFromUrl(url, displayName = url) {
+        if (!url) {
+          return;
+        }
+
+        if (state.customBgObjectUrl) {
+          URL.revokeObjectURL(state.customBgObjectUrl);
+          state.customBgObjectUrl = "";
+        }
+
+        const image = new Image();
+        try {
+          const parsed = new URL(url, window.location.href);
+          if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+            image.crossOrigin = "anonymous";
+          }
+        } catch (error) {
+          // Ignore URL parse failures and keep default loading behavior.
+        }
+        image.onload = () => {
+          state.customBgImage = image;
+          state.customBgName = displayName;
+          state.bgLoadError = false;
+          updateStatusText();
+        };
+        image.onerror = () => {
+          state.customBgImage = null;
+          state.customBgName = "";
+          state.bgLoadError = true;
+          updateStatusText();
+        };
+        image.src = url;
+      }
+
+      function setTallBackgroundFromUrl(url) {
+        if (!url) {
+          return;
+        }
+        const image = new Image();
+        try {
+          const parsed = new URL(url, window.location.href);
+          if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+            image.crossOrigin = "anonymous";
+          }
+        } catch (error) {
+          // Ignore URL parse failures and keep default loading behavior.
+        }
+        image.onload = () => {
+          state.tallBgImage = image;
+          state.tallBgLoadError = false;
+          updateStatusText();
+        };
+        image.onerror = () => {
+          state.tallBgImage = null;
+          state.tallBgLoadError = true;
+          updateStatusText();
+        };
+        image.src = url;
+      }
+
+      function bindEvents() {
+        guiScaleSelect.addEventListener("change", () => {
+          applyControlValuesToState();
+        });
+
+        window.addEventListener("resize", () => {
+          refreshViewportLayoutAndMirrors();
+        });
+
+        if (window.visualViewport) {
+          window.visualViewport.addEventListener("resize", () => {
+            refreshViewportLayoutAndMirrors();
+          });
+        }
+
+        zoomOutButton.addEventListener("click", () => {
+          setScreenZoom(
+            state.screenZoom - SCREEN_ZOOM_STEP,
+            false,
+            state.zoomAnchorClientX,
+            state.zoomAnchorClientY
+          );
+        });
+
+        zoomInButton.addEventListener("click", () => {
+          setScreenZoom(
+            state.screenZoom + SCREEN_ZOOM_STEP,
+            false,
+            state.zoomAnchorClientX,
+            state.zoomAnchorClientY
+          );
+        });
+
+        zoomResetButton.addEventListener("click", () => {
+          setScreenZoom(1, true);
+        });
+
+        viewportWrap.addEventListener("wheel", (event) => {
+          if (event.ctrlKey) {
+            const delta = event.deltaY < 0 ? SCREEN_ZOOM_STEP : -SCREEN_ZOOM_STEP;
+            setScreenZoom(state.screenZoom + delta, false, event.clientX, event.clientY);
+            event.preventDefault();
+            return;
+          }
+          if (state.displayVariant !== "tall") {
+            return;
+          }
+          if (state.mirrorSelectionMode || state.mirrorSelectionDrag || state.mirrorColorPick) {
+            return;
+          }
+          const { maxPanX, maxPanY } = getScreenPanLimits();
+          if (maxPanX < 0.5 && maxPanY < 0.5) {
+            return;
+          }
+          const modeScale = event.deltaMode === 1 ? 24 : (event.deltaMode === 2 ? 120 : 1);
+          const deltaX = event.deltaX * modeScale;
+          const deltaY = event.deltaY * modeScale;
+          const targetPanY = state.screenPanY - deltaY;
+          const targetPanX = state.screenPanX - (event.shiftKey ? deltaY : deltaX);
+          state.screenPanY = clamp(targetPanY, -maxPanY, maxPanY);
+          state.screenPanX = clamp(targetPanX, -maxPanX, maxPanX);
+          updateViewportLayout();
+          updateStatusText();
+          event.preventDefault();
+        }, { passive: false });
+
+        viewportWrap.addEventListener("pointermove", (event) => {
+          state.zoomAnchorClientX = event.clientX;
+          state.zoomAnchorClientY = event.clientY;
+        });
+
+        viewportWrap.addEventListener("pointerleave", () => {
+          state.zoomAnchorClientX = null;
+          state.zoomAnchorClientY = null;
+        });
+
+        viewportWrap.addEventListener("pointerdown", (event) => {
+          if (startScreenPanDrag(event)) {
+            event.preventDefault();
+          }
+        });
+
+        viewportWrap.addEventListener("auxclick", (event) => {
+          if (event.button === 1) {
+            event.preventDefault();
+          }
+        });
+
+        applyResolutionButton.addEventListener("click", onApplyResolutionClick);
+
+        presetSelect.addEventListener("change", () => {
+          if (presetSelect.value === "custom") {
+            return;
+          }
+          const [w, h] = presetSelect.value.split("x").map((value) => Number(value));
+          setDisplayVariant("preset");
+          setViewportCropMode("contain");
+          applyResolution(w, h);
+          setBaseResolution(state.windowWidth, state.windowHeight, true);
+          applyControlValuesToState();
+          renderMirrorPanels();
+        });
+
+        wideButton.addEventListener("click", () => {
+          runAction(ACTION_KEYS.wide);
+        });
+
+        thinButton.addEventListener("click", () => {
+          runAction(ACTION_KEYS.thin);
+        });
+
+        tallButton.addEventListener("click", () => {
+          runAction(ACTION_KEYS.tall);
+        });
+
+        openNinjabrainKeybindSet.addEventListener("click", () => {
+          setKeybindCaptureAction(ACTION_KEYS.openNinjabrain);
+        });
+        openNinjabrainKeybindClear.addEventListener("click", () => {
+          clearActionKeybind(ACTION_KEYS.openNinjabrain);
+        });
+        thinKeybindSet.addEventListener("click", () => {
+          setKeybindCaptureAction(ACTION_KEYS.thin);
+        });
+        thinKeybindClear.addEventListener("click", () => {
+          clearActionKeybind(ACTION_KEYS.thin);
+        });
+        wideKeybindSet.addEventListener("click", () => {
+          setKeybindCaptureAction(ACTION_KEYS.wide);
+        });
+        wideKeybindClear.addEventListener("click", () => {
+          clearActionKeybind(ACTION_KEYS.wide);
+        });
+        tallKeybindSet.addEventListener("click", () => {
+          setKeybindCaptureAction(ACTION_KEYS.tall);
+        });
+        tallKeybindClear.addEventListener("click", () => {
+          clearActionKeybind(ACTION_KEYS.tall);
+        });
+        overlayColorAInput.addEventListener("input", () => {
+          updateTallOverlayFromControls();
+        });
+        overlayColorBInput.addEventListener("input", () => {
+          updateTallOverlayFromControls();
+        });
+        overlayTextColorInput.addEventListener("input", () => {
+          updateTallOverlayFromControls();
+        });
+        overlayPixelCountInput.addEventListener("change", () => {
+          updateTallOverlayFromControls();
+        });
+        overlayPixelHeightInput.addEventListener("change", () => {
+          updateTallOverlayFromControls();
+        });
+        overlayOpacityPixelsInput.addEventListener("change", () => {
+          updateTallOverlayFromControls();
+        });
+        overlayOpacityTextInput.addEventListener("change", () => {
+          updateTallOverlayFromControls();
+        });
+        overlayTextSizeInput.addEventListener("change", () => {
+          updateTallOverlayFromControls();
+        });
+        overlayFontStyleSelect.addEventListener("change", () => {
+          updateTallOverlayFromControls();
+        });
+        exportTallOverlayButton.addEventListener("click", () => {
+          exportTallOverlayImage();
+        });
+
+        actionsSettingsToggle.addEventListener("click", () => {
+          const isExpanded = actionsSettingsToggle.getAttribute("aria-expanded") === "true";
+          setCollapsibleState(actionsSettingsToggle, actionsSettingsBody, !isExpanded);
+        });
+
+        addMirrorButton.addEventListener("click", () => {
+          addMirror({
+            x: mirrorXInput.value,
+            y: mirrorYInput.value,
+            w: mirrorWInput.value,
+            h: mirrorHInput.value
+          });
+        });
+
+        clearMirrorsButton.addEventListener("click", () => {
+          clearAllMirrors();
+        });
+
+        selectMirrorButton.addEventListener("click", () => {
+          setMirrorSelectionMode(!state.mirrorSelectionMode);
+        });
+
+        mirrorOverlayLayer.addEventListener("pointerdown", (event) => {
+          if (state.mirrorColorPick && event.button === 0) {
+            console.log("[mirror-pick] overlay pointerdown while picking", {
+              clientX: event.clientX,
+              clientY: event.clientY,
+              targetClass: event.target?.className || null,
+              targetMirrorId: state.mirrorColorPick.mirrorId
+            });
+            const targetMirror = getMirrorById(state.mirrorColorPick.mirrorId);
+            if (targetMirror) {
+              let picked = null;
+              const overlay = event.target.closest(".mirror-overlay");
+              if (overlay) {
+                picked = sampleMirrorOverlayColorFromEvent(overlay, event);
+                if (!picked) {
+                  const sourceMirror = getMirrorById(overlay.dataset.mirrorId);
+                  if (sourceMirror) {
+                    picked = sampleMirrorSourceColorFromEvent(sourceMirror, overlay, event);
+                  }
+                }
+                if (!picked) {
+                  const pointer = getCanvasPointerPosition(event, false);
+                  picked = sampleCanvasColor(pointer.x, pointer.y);
+                }
+              }
+              if (!picked) {
+                const pointer = getCanvasPointerPosition(event, false);
+                picked = sampleCanvasColor(pointer.x, pointer.y);
+              }
+              console.log("[mirror-pick] overlay picked color result", { picked, targetMirrorId: targetMirror.id });
+              if (picked) {
+                const added = addMirrorColorKey(targetMirror, picked);
+                console.log("[mirror-pick] overlay add result", { added, picked });
+                state.suppressNextCanvasClick = true;
+                setMirrorColorPickMode(null);
+                event.preventDefault();
+                return;
+              }
+            }
+            console.log("[mirror-pick] overlay pick failed: no color sampled");
+            event.preventDefault();
+            return;
+          }
+
+          const resizer = event.target.closest(".mirror-overlay-resizer");
+          if (resizer) {
+            const overlay = resizer.closest(".mirror-overlay");
+            if (overlay) {
+              startMirrorOverlayResize(event, overlay);
+            }
+            return;
+          }
+          const overlay = event.target.closest(".mirror-overlay");
+          if (!overlay) {
+            return;
+          }
+          startMirrorOverlayDrag(event, overlay);
+        });
+
+        canvas.addEventListener("pointerdown", (event) => {
+          if (state.mirrorColorPick && event.button === 0) {
+            console.log("[mirror-pick] canvas pointerdown while picking", {
+              clientX: event.clientX,
+              clientY: event.clientY,
+              targetMirrorId: state.mirrorColorPick.mirrorId
+            });
+            const targetMirror = getMirrorById(state.mirrorColorPick.mirrorId);
+            if (targetMirror) {
+              const pointer = getCanvasPointerPosition(event, false);
+              const picked = sampleCanvasColor(pointer.x, pointer.y);
+              console.log("[mirror-pick] canvas picked color result", { picked, targetMirrorId: targetMirror.id });
+              if (picked) {
+                const added = addMirrorColorKey(targetMirror, picked);
+                console.log("[mirror-pick] canvas add result", { added, picked });
+                state.suppressNextCanvasClick = true;
+                setMirrorColorPickMode(null);
+                event.preventDefault();
+                return;
+              }
+            }
+            console.log("[mirror-pick] canvas pick failed: no color sampled");
+            event.preventDefault();
+            return;
+          }
+
+          if (!state.mirrorSelectionMode || event.button !== 0) {
+            return;
+          }
+          const pointer = getCanvasPointerPosition(event);
+          state.mirrorSelectionDrag = {
+            start: pointer,
+            current: pointer
+          };
+          updateMirrorSelectionBox();
+          event.preventDefault();
+        });
+
+        window.addEventListener("pointermove", (event) => {
+          if (state.screenPanDrag) {
+            updateScreenPanDrag(event);
+            event.preventDefault();
+            return;
+          }
+          if (state.mirrorSelectionDrag) {
+            state.mirrorSelectionDrag.current = getCanvasPointerPosition(event);
+            updateMirrorSelectionBox();
+            event.preventDefault();
+            return;
+          }
+          if (state.mirrorOverlayResize) {
+            updateMirrorOverlayResize(event);
+            return;
+          }
+          if (state.mirrorOverlayDrag) {
+            updateMirrorOverlayDrag(event);
+          }
+        });
+
+        window.addEventListener("pointerup", (event) => {
+          if (state.screenPanDrag && event.button === 1) {
+            endScreenPanDrag();
+            event.preventDefault();
+            return;
+          }
+          if (state.mirrorSelectionDrag && event.button === 0) {
+            state.mirrorSelectionDrag.current = getCanvasPointerPosition(event);
+            finalizeMirrorSelection();
+            state.suppressNextCanvasClick = true;
+            setMirrorSelectionMode(false);
+            event.preventDefault();
+            return;
+          }
+          if (state.mirrorOverlayResize && event.button === 0) {
+            endMirrorOverlayResize();
+            event.preventDefault();
+            return;
+          }
+          if (state.mirrorOverlayDrag && event.button === 0) {
+            endMirrorOverlayDrag();
+            event.preventDefault();
+          }
+        });
+
+        window.addEventListener("keydown", (event) => {
+          if (event.key === "Escape" && state.screenPanDrag) {
+            endScreenPanDrag();
+            event.preventDefault();
+            return;
+          }
+          if (event.key === "Escape" && state.mirrorColorPick) {
+            setMirrorColorPickMode(null);
+            event.preventDefault();
+            return;
+          }
+          if (event.key === "Escape" && state.mirrorSelectionMode) {
+            setMirrorSelectionMode(false);
+            event.preventDefault();
+            return;
+          }
+          if (event.key === "Escape" && state.mirrorOverlayDrag) {
+            endMirrorOverlayDrag();
+            event.preventDefault();
+            return;
+          }
+          if (event.key === "Escape" && state.mirrorOverlayResize) {
+            endMirrorOverlayResize();
+            event.preventDefault();
+            return;
+          }
+          if (state.keybindCaptureAction) {
+            if (event.key === "Escape") {
+              state.keybindCaptureAction = "";
+              updateActionKeybindUi();
+              event.preventDefault();
+              return;
+            }
+            if (["Shift", "Control", "Alt", "Meta"].includes(event.key)) {
+              event.preventDefault();
+              return;
+            }
+            setActionKeybind(state.keybindCaptureAction, event.code);
+            state.keybindCaptureAction = "";
+            updateActionKeybindUi();
+            event.preventDefault();
+            return;
+          }
+          if (!event.ctrlKey && !event.altKey && !event.metaKey && !shouldIgnoreGlobalKeybind(event)) {
+            const actionKey = findActionForCode(event.code);
+            if (actionKey) {
+              runAction(actionKey);
+              event.preventDefault();
+              return;
+            }
+          }
+          if (state.mode !== "pie" && state.mode !== "f3pie") {
+            return;
+          }
+          if (event.key >= "0" && event.key <= "9") {
+            navigatePie(Number(event.key));
+            event.preventDefault();
+          }
+        });
+
+        canvas.addEventListener("click", (event) => {
+          if (state.suppressNextCanvasClick) {
+            state.suppressNextCanvasClick = false;
+            return;
+          }
+          if (state.mirrorSelectionMode || state.mirrorSelectionDrag) {
+            return;
+          }
+          if (state.mode !== "pie" && state.mode !== "f3pie") {
+            return;
+          }
+
+          const bounds = canvas.getBoundingClientRect();
+          const x = (event.clientX - bounds.left) * canvas.width / bounds.width;
+          const y = (event.clientY - bounds.top) * canvas.height / bounds.height;
+
+          for (const box of state.lastPieHitboxes) {
+            if (x >= box.x && x <= box.x + box.w && y >= box.y && y <= box.y + box.h) {
+              navigatePie(box.index + 1);
+              break;
+            }
+          }
+        });
+      }
+
+      function bootstrapUI() {
+        const storedBaseResolution = loadBaseResolutionFromStorage();
+        const initialWidth = storedBaseResolution ? storedBaseResolution.width : DEFAULT_RESOLUTION[0];
+        const initialHeight = storedBaseResolution ? storedBaseResolution.height : DEFAULT_RESOLUTION[1];
+
+        fillResolutionPresetSelect();
+        loadActionKeybindsFromStorage();
+        loadTallOverlaySettingsFromStorage();
+        widthInput.value = String(initialWidth);
+        heightInput.value = String(initialHeight);
+        guiScaleSelect.value = String(state.guiScaleSetting);
+        mirrorXInput.value = "0";
+        mirrorYInput.value = "0";
+        mirrorWInput.value = "320";
+        mirrorHInput.value = "180";
+
+        applyResolution(initialWidth, initialHeight);
+        setBaseResolution(initialWidth, initialHeight);
+        setDisplayVariant("preset");
+        setCollapsibleState(actionsSettingsToggle, actionsSettingsBody, true);
+        updateActionKeybindUi();
+        syncTallOverlayControls();
+        drawTallEyeOverlay();
+        syncPresetFromResolution();
+        randomizeSamples();
+        loadMirrorsFromStorage();
+        renderMirrorPanels();
+        setMirrorSelectionMode(false);
+        setCustomBackgroundFromUrl(
+          FORCED_BACKGROUND_DATA_URL || FORCED_BACKGROUND_URL,
+          FORCED_BACKGROUND_URL
+        );
+        setTallBackgroundFromUrl(FORCED_TALL_BACKGROUND_DATA_URL || FORCED_TALL_BACKGROUND_URL);
+        updateStatusText();
+        bindEvents();
+      }
+
+      let lastFrameMs = performance.now();
+      function frame(nowMs) {
+        const dtMs = Math.max(0.001, nowMs - lastFrameMs);
+        lastFrameMs = nowMs;
+
+        const currentDevicePixelRatio = Math.max(1, window.devicePixelRatio || 1);
+        if (Math.abs(currentDevicePixelRatio - state.lastDevicePixelRatio) > 0.001) {
+          state.lastDevicePixelRatio = currentDevicePixelRatio;
+          refreshViewportLayoutAndMirrors();
+        }
+
+        state.tickCount += dtMs;
+        pushGraphSamples(dtMs);
+
+        applyControlValuesToState();
+        draw(nowMs);
+        drawTallEyeOverlay();
+        drawMirrorOverlays();
+        requestAnimationFrame(frame);
+      }
+
+      bootstrapUI();
+      window.addEventListener("beforeunload", () => {
+        if (state.customBgObjectUrl) {
+          URL.revokeObjectURL(state.customBgObjectUrl);
+        }
+      });
+      requestAnimationFrame(frame);
+    })();
+  </script>
+</body>
+</html>
