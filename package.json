@@ -1,0 +1,15 @@
+{
+  "name": "webwall",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "build": "browserify src/main.ts -p [ tsify ] -o public/bundle.js",
+    "watch": "watchify src/main.ts -p [ tsify ] -o public/bundle.js -v"
+  },
+  "devDependencies": {
+    "browserify": "^17.0.0",
+    "tsify": "^5.0.4",
+    "typescript": "^5.6.3",
+    "watchify": "^4.0.0"
+  }
+}

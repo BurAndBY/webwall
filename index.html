@@ -1,0 +1,1024 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link href="https://fonts.cdnfonts.com/css/minecraftia" rel="stylesheet">
+  <title>F3 + Piechart HTML Simulator</title>
+  <style>
+    :root {
+      --bg: #0b0c0f;
+      --panel: #11141a;
+      --panel-soft: #151a22;
+      --border: #2a3140;
+      --text: #e4e8ee;
+      --muted: #96a0b1;
+      --accent: #8fdcff;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 24% 8%, #182533 0%, #0b0c10 55%),
+        linear-gradient(180deg, #090a0d, #10131a 45%, #0a0c10);
+      color: var(--text);
+      font-family: 'Minecraftia', "Consolas", "Cascadia Mono", "SFMono-Regular", "Liberation Mono", monospace;
+      padding: 12px;
+    }
+
+    .app {
+      width: 100%;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: minmax(320px, 380px) minmax(0, 1fr);
+      gap: 12px;
+      align-items: start;
+    }
+
+    .controls {
+      background: linear-gradient(180deg, #12161d, #10141a);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      display: grid;
+      gap: 12px;
+      align-content: start;
+      max-height: calc(100vh - 24px);
+      overflow: auto;
+      position: sticky;
+      top: 12px;
+    }
+
+    .panel-header {
+      display: grid;
+      gap: 8px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .panel-title {
+      margin: 0;
+      font-size: 14px;
+      color: #f4f8ff;
+    }
+
+    .status {
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.4;
+      word-break: break-word;
+    }
+
+    .control-card {
+      display: grid;
+      gap: 10px;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--panel-soft);
+    }
+
+    .card-title {
+      margin: 0;
+      font-size: 12px;
+      color: #edf3ff;
+    }
+
+    .card-header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      cursor: pointer;
+    }
+
+    .card-collapse-toggle {
+      width: 24px;
+      height: 24px;
+      min-height: 24px;
+      min-width: 24px;
+      padding: 0;
+      font-size: 10px;
+      line-height: 1;
+    }
+
+    .collapsible-body[hidden] {
+      display: none;
+    }
+
+    .field-grid {
+      display: grid;
+      gap: 8px;
+    }
+
+    .resolution-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .mirror-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .field {
+      min-width: 0;
+      display: grid;
+      gap: 4px;
+    }
+
+    .keybind-grid {
+      display: grid;
+      gap: 8px;
+    }
+
+    .overlay-generator-grid {
+      display: grid;
+      gap: 8px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .theme-grid {
+      display: grid;
+      gap: 8px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .keybind-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+      min-height: 32px;
+      border: 1px solid #3a4354;
+      border-radius: 4px;
+      background: #0d1118;
+      padding: 4px 7px;
+    }
+
+    .keybind-name {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .keybind-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .keybind-value {
+      min-width: 80px;
+      text-align: center;
+      color: #d8ebff;
+      font-size: 11px;
+      border: 1px solid #2f3b51;
+      border-radius: 4px;
+      background: #111823;
+      padding: 2px 6px;
+    }
+
+    .keybind-controls button {
+      width: auto;
+      min-height: 24px;
+      min-width: 54px;
+      padding: 2px 8px;
+      font-size: 10px;
+    }
+
+    label {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    select,
+    input,
+    button {
+      width: 100%;
+      background: #0d1118;
+      color: var(--text);
+      border: 1px solid #3a4354;
+      padding: 4px 7px;
+      font: inherit;
+      font-size: 11px;
+      border-radius: 4px;
+      min-height: 30px;
+    }
+
+    input[type="file"] {
+      width: 100%;
+      padding: 2px 6px;
+    }
+
+    input[type="checkbox"] {
+      width: auto;
+      min-height: auto;
+      accent-color: #5fbe5f;
+    }
+
+    button {
+      cursor: pointer;
+      background: linear-gradient(180deg, #253042, #1b2433);
+    }
+
+    button:hover {
+      background: linear-gradient(180deg, #2b374b, #1f2a3a);
+    }
+
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .action-row {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .action-row button {
+      flex: 1 1 0;
+      min-width: 86px;
+    }
+
+    .selection-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .workspace {
+      min-width: 0;
+      display: grid;
+      gap: 10px;
+      align-content: start;
+    }
+
+    .workspace-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--panel);
+      padding: 8px 10px;
+    }
+
+    .workspace-title {
+      color: #dce7f9;
+      font-size: 12px;
+    }
+
+    .viewport-wrap {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      background: #000;
+      width: 100%;
+      aspect-ratio: var(--preview-aspect, 16 / 9);
+      position: relative;
+      min-height: 340px;
+    }
+
+    #screenCanvas {
+      display: block;
+      position: absolute;
+      left: var(--canvas-left, 0px);
+      top: var(--canvas-top, 0px);
+      transform: translate(var(--canvas-pan-x, 0px), var(--canvas-pan-y, 0px));
+      transform-origin: top left;
+      width: var(--canvas-display-width, 100%);
+      height: var(--canvas-display-height, 100%);
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      background: #000;
+      z-index: 1;
+      touch-action: none;
+    }
+
+    #eyeMeasureOverlayCanvas {
+      display: block;
+      position: absolute;
+      left: var(--overlay-left, 0px);
+      top: var(--overlay-top, 0px);
+      width: var(--overlay-display-width, 0px);
+      height: var(--overlay-display-height, 0px);
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    #eyeMeasureOverlayCanvas.hidden {
+      display: none;
+    }
+
+    #eyeMeasureTextCanvas {
+      display: block;
+      position: absolute;
+      left: var(--overlay-left, 0px);
+      top: var(--overlay-top, 0px);
+      width: var(--overlay-display-width, 0px);
+      height: var(--overlay-display-height, 0px);
+      image-rendering: auto;
+      z-index: 3;
+      pointer-events: none;
+    }
+
+    #eyeMeasureTextCanvas.hidden {
+      display: none;
+    }
+
+    .viewport-wrap.mirror-selecting #screenCanvas {
+      cursor: crosshair;
+    }
+
+    .viewport-wrap.color-picking-screen #screenCanvas {
+      cursor: crosshair;
+    }
+
+    .viewport-wrap.panning #screenCanvas {
+      cursor: grabbing;
+    }
+
+    .zoom-controls {
+      position: absolute;
+      right: 8px;
+      top: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      z-index: 7;
+      padding: 4px 6px;
+      border: 1px solid #2f3949;
+      border-radius: 6px;
+      background: rgba(8, 10, 14, 0.9);
+    }
+
+    .zoom-controls button {
+      width: auto;
+      min-width: 32px;
+    }
+
+    .zoom-level {
+      min-width: 44px;
+      text-align: center;
+      color: #cfdcf0;
+      font-size: 11px;
+      user-select: none;
+    }
+
+    .mirror-selection-box {
+      position: absolute;
+      border: 1px dashed #7fe0ff;
+      background: rgba(74, 183, 255, 0.2);
+      z-index: 4;
+      pointer-events: none;
+      display: none;
+    }
+
+    .mirror-selection-box.active {
+      display: block;
+    }
+
+    .mirror-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .mirror-item {
+      display: grid;
+      gap: 7px;
+      padding: 7px 8px;
+      border: 1px solid #334057;
+      border-radius: 6px;
+      background: #0f141d;
+      font-size: 11px;
+      color: #d7deea;
+    }
+
+    .mirror-main {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .mirror-label {
+      min-width: 0;
+      word-break: break-word;
+      color: #ced8e8;
+    }
+
+    .mirror-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .mirror-actions button {
+      width: auto;
+      min-width: 76px;
+    }
+
+    .mirror-key-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .mirror-key-controls button {
+      width: auto;
+    }
+
+    .mirror-key-controls input[type="color"] {
+      width: 36px;
+      min-height: 28px;
+      padding: 1px;
+      border-radius: 4px;
+      border: 1px solid #3b3b3b;
+      background: #0f0f0f;
+    }
+
+    .mirror-key-count {
+      color: #98a4b8;
+      font-size: 10px;
+      margin-left: auto;
+    }
+
+    .mirror-key-list {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .mirror-key-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      border: 1px solid #344054;
+      border-radius: 4px;
+      background: #101722;
+      padding: 2px 5px;
+      font-size: 10px;
+      color: #d7deea;
+    }
+
+    .mirror-key-swatch {
+      width: 10px;
+      height: 10px;
+      border: 1px solid #212121;
+      border-radius: 2px;
+      background: var(--key-color, #000000);
+      flex: none;
+    }
+
+    .mirror-key-remove {
+      width: auto;
+      min-height: 20px;
+      min-width: 20px;
+      padding: 2px 5px;
+      line-height: 1;
+      font-size: 10px;
+    }
+
+    .mirror-empty {
+      color: #9ba7bc;
+      font-size: 11px;
+      padding: 4px 0;
+    }
+
+    .mirror-selection-status {
+      color: #9ca7ba;
+      font-size: 11px;
+    }
+
+    .mirror-selection-status.active {
+      color: var(--accent);
+    }
+
+    .mirror-overlay-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      pointer-events: none;
+    }
+
+    .mirror-overlay-layer.hidden {
+      display: none;
+    }
+
+    .mirror-overlay {
+      position: absolute;
+      border: 1px solid #3b4a62;
+      border-radius: 6px;
+      background: transparent;
+      overflow: hidden;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+      pointer-events: auto;
+      cursor: grab;
+      touch-action: none;
+      user-select: none;
+    }
+
+    .mirror-overlay.keyed {
+      background-color: #141d2b;
+      background-image:
+        linear-gradient(45deg, rgba(255, 255, 255, 0.08) 25%, transparent 25%, transparent 75%, rgba(255, 255, 255, 0.08) 75%, rgba(255, 255, 255, 0.08)),
+        linear-gradient(45deg, rgba(255, 255, 255, 0.08) 25%, transparent 25%, transparent 75%, rgba(255, 255, 255, 0.08) 75%, rgba(255, 255, 255, 0.08));
+      background-size: 8px 8px;
+      background-position: 0 0, 4px 4px;
+    }
+
+    .mirror-overlay.dragging {
+      cursor: grabbing;
+      border-color: #7fdcff;
+    }
+
+    .mirror-overlay.resizing {
+      border-color: #ffc977;
+    }
+
+    .mirror-overlay.color-picking-target {
+      border-color: #8fdcff;
+      box-shadow: 0 0 0 1px rgba(143, 220, 255, 0.35), 0 2px 10px rgba(0, 0, 0, 0.45);
+    }
+
+    .viewport-wrap.color-picking-screen .mirror-overlay {
+      cursor: crosshair;
+    }
+
+    .viewport-wrap.color-picking-screen .mirror-overlay-resizer {
+      opacity: 0.45;
+      pointer-events: none;
+    }
+
+    .viewport-wrap.panning .mirror-overlay {
+      cursor: grabbing;
+    }
+
+    .mirror-overlay-canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      background: transparent;
+    }
+
+    .mirror-overlay-resizer {
+      position: absolute;
+      background: transparent;
+      z-index: 2;
+    }
+
+    .mirror-overlay-resizer-n {
+      left: 0;
+      right: 0;
+      top: 0;
+      height: 10px;
+      cursor: ns-resize;
+    }
+
+    .mirror-overlay-resizer-s {
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 10px;
+      cursor: ns-resize;
+    }
+
+    .mirror-overlay-resizer-e {
+      top: 0;
+      bottom: 0;
+      right: 0;
+      width: 10px;
+      cursor: ew-resize;
+    }
+
+    .mirror-overlay-resizer-w {
+      top: 0;
+      bottom: 0;
+      left: 0;
+      width: 10px;
+      cursor: ew-resize;
+    }
+
+    .hint {
+      margin: 0;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.3;
+    }
+
+    code {
+      font: inherit;
+      color: #d8ebff;
+      background: #111823;
+      border: 1px solid #2f3b51;
+      border-radius: 3px;
+      padding: 0 3px;
+    }
+
+    @media (max-width: 1180px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+
+      .controls {
+        position: static;
+        max-height: none;
+      }
+
+      .viewport-wrap {
+        min-height: 300px;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .resolution-grid,
+      .mirror-grid,
+      .overlay-generator-grid,
+      .theme-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .action-row button {
+        flex: 1 1 100%;
+      }
+    }
+  </style>
+  <link rel="stylesheet" href="public/theme-mcsr-project.css">
+</head>
+<body>
+  <main class="app">
+    <aside class="controls">
+      <header class="panel-header">
+        <h1 class="panel-title">webwall - <span style="color: red;">WIP!!</span></h1>
+        <div id="statusText" class="status"></div>
+      </header>
+
+      <section class="control-card">
+        <div class="card-header-row">
+          <h2 class="card-title">Resolution & View</h2>
+          <button
+            id="resolutionViewToggle"
+            class="card-collapse-toggle"
+            type="button"
+            aria-expanded="true"
+            aria-controls="resolutionViewBody"
+          >▴</button>
+        </div>
+        <div id="resolutionViewBody" class="collapsible-body">
+        <div class="field-grid resolution-grid">
+          <label class="field" for="presetSelect">
+            Preset
+            <select id="presetSelect"></select>
+          </label>
+
+          <label class="field" for="guiScaleSelect">
+            GUI Scale
+            <select id="guiScaleSelect">
+              <option value="0">Auto</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+              <option value="6">6</option>
+              <option value="7">7</option>
+              <option value="8">8</option>
+            </select>
+          </label>
+
+          <label class="field" for="widthInput">
+            Width
+            <input id="widthInput" type="number" min="300" max="7680" step="1">
+          </label>
+
+          <label class="field" for="heightInput">
+            Height
+            <input id="heightInput" type="number" min="240" max="16384" step="1">
+          </label>
+        </div>
+
+        <div class="action-row">
+          <button id="applyResolution">Apply Resolution</button>
+        </div>
+
+        <div class="action-row">
+          <button id="wideButton" type="button">Wide</button>
+          <button id="thinButton" type="button">Thin</button>
+          <button id="tallButton" type="button">Tall</button>
+        </div>
+        </div>
+      </section>
+
+      <section class="control-card">
+        <div class="card-header-row">
+          <h2 class="card-title">Actions Settings</h2>
+          <button
+            id="actionsSettingsToggle"
+            class="card-collapse-toggle"
+            type="button"
+            aria-expanded="true"
+            aria-controls="actionsSettingsBody"
+          >▴</button>
+        </div>
+        <div id="actionsSettingsBody" class="keybind-grid collapsible-body">
+          <div class="keybind-row">
+            <span class="keybind-name">Open Ninjabrain Bot</span>
+            <div class="keybind-controls">
+              <span id="openNinjabrainKeybindValue" class="keybind-value">Unset</span>
+              <button id="openNinjabrainKeybindSet" type="button">Set</button>
+              <button id="openNinjabrainKeybindClear" type="button">Clear</button>
+            </div>
+          </div>
+          <div class="keybind-row">
+            <span class="keybind-name">Thin</span>
+            <div class="keybind-controls">
+              <span id="thinKeybindValue" class="keybind-value">Unset</span>
+              <button id="thinKeybindSet" type="button">Set</button>
+              <button id="thinKeybindClear" type="button">Clear</button>
+            </div>
+          </div>
+          <div class="keybind-row">
+            <span class="keybind-name">Wide</span>
+            <div class="keybind-controls">
+              <span id="wideKeybindValue" class="keybind-value">Unset</span>
+              <button id="wideKeybindSet" type="button">Set</button>
+              <button id="wideKeybindClear" type="button">Clear</button>
+            </div>
+          </div>
+          <div class="keybind-row">
+            <span class="keybind-name">Tall</span>
+            <div class="keybind-controls">
+              <span id="tallKeybindValue" class="keybind-value">Unset</span>
+              <button id="tallKeybindSet" type="button">Set</button>
+              <button id="tallKeybindClear" type="button">Clear</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="control-card">
+        <div class="card-header-row">
+          <h2 class="card-title">Theme</h2>
+          <button
+            id="themeSettingsToggle"
+            class="card-collapse-toggle"
+            type="button"
+            aria-expanded="true"
+            aria-controls="themeSettingsBody"
+          >▴</button>
+        </div>
+        <div id="themeSettingsBody" class="collapsible-body">
+          <div class="theme-grid">
+            <label class="field" for="themeBackgroundTypeSelect">
+              Background Type
+              <select id="themeBackgroundTypeSelect">
+                <option value="color">Color</option>
+                <option value="image">Image</option>
+              </select>
+            </label>
+            <label id="themeBackgroundColorField" class="field" for="themeBackgroundInput">
+              Background Color
+              <input id="themeBackgroundInput" type="color" value="#000000">
+            </label>
+            <label id="themeBackgroundAlphaField" class="field" for="themeBackgroundAlphaInput">
+              Background Alpha
+              <input id="themeBackgroundAlphaInput" type="number" min="0" max="1" step="0.01" value="1.00">
+            </label>
+            <label id="themeBackgroundPngField" class="field" for="themeBackgroundPngInput">
+              Background PNG Path
+              <input id="themeBackgroundPngInput" type="text" value="" placeholder="/path/to/background.png">
+            </label>
+            <label class="field" for="themeCursorThemeInput">
+              Cursor Theme
+              <input id="themeCursorThemeInput" type="text" value="">
+            </label>
+            <label id="themeCursorIconField" class="field" for="themeCursorIconInput" hidden>
+              Cursor Icon
+              <input id="themeCursorIconInput" type="text" value="">
+            </label>
+            <label id="themeCursorSizeField" class="field" for="themeCursorSizeInput" hidden>
+              Cursor Size
+              <input id="themeCursorSizeInput" type="number" min="0" step="1" value="0">
+            </label>
+            <label class="field" for="themeNinbOpacityInput">
+              Ninjabrain Opacity
+              <input id="themeNinbOpacityInput" type="number" min="0" max="1" step="0.05" value="1.0">
+            </label>
+            <label id="themeNinbAnchorModeField" class="field" for="themeNinbAnchorTypeSelect" hidden>
+              Ninjabrain Anchor Mode
+              <select id="themeNinbAnchorTypeSelect" hidden aria-hidden="true">
+                <option value="string">String</option>
+              </select>
+            </label>
+            <label class="field" for="themeNinbAnchorPositionSelect">
+              Ninjabrain Anchor Position
+              <select id="themeNinbAnchorPositionSelect">
+                <option value="">(empty)</option>
+                <option value="topleft">topleft</option>
+                <option value="top">top</option>
+                <option value="topright">topright</option>
+                <option value="left">left</option>
+                <option value="right">right</option>
+                <option value="bottomleft">bottomleft</option>
+                <option value="bottomright">bottomright</option>
+              </select>
+            </label>
+            <label id="themeNinbAnchorXField" class="field" for="themeNinbAnchorXInput" hidden>
+              Ninjabrain Anchor X Offset
+              <input id="themeNinbAnchorXInput" type="number" step="1" placeholder="optional">
+            </label>
+            <label id="themeNinbAnchorYField" class="field" for="themeNinbAnchorYInput" hidden>
+              Ninjabrain Anchor Y Offset
+              <input id="themeNinbAnchorYInput" type="number" step="1" placeholder="optional">
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <section class="control-card">
+        <div class="card-header-row">
+          <h2 class="card-title">Window</h2>
+          <button
+            id="windowSettingsToggle"
+            class="card-collapse-toggle"
+            type="button"
+            aria-expanded="true"
+            aria-controls="windowSettingsBody"
+          >▴</button>
+        </div>
+        <div id="windowSettingsBody" class="collapsible-body">
+          <div class="field-grid resolution-grid">
+            <label class="field" for="windowFullscreenWidthInput">
+              Fullscreen Width
+              <input id="windowFullscreenWidthInput" type="number" min="0" step="1" value="0">
+            </label>
+            <label class="field" for="windowFullscreenHeightInput">
+              Fullscreen Height
+              <input id="windowFullscreenHeightInput" type="number" min="0" step="1" value="0">
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <section class="control-card">
+        <div class="card-header-row">
+          <h2 class="card-title">Mirrors</h2>
+          <button
+            id="mirrorsToggle"
+            class="card-collapse-toggle"
+            type="button"
+            aria-expanded="true"
+            aria-controls="mirrorsBody"
+          >▴</button>
+        </div>
+        <div id="mirrorsBody" class="collapsible-body">
+        <div class="field-grid mirror-grid">
+          <label class="field" for="mirrorXInput">
+            X
+            <input id="mirrorXInput" type="number" min="0" step="1">
+          </label>
+
+          <label class="field" for="mirrorYInput">
+            Y
+            <input id="mirrorYInput" type="number" min="0" step="1">
+          </label>
+
+          <label class="field" for="mirrorWInput">
+            W
+            <input id="mirrorWInput" type="number" min="1" step="1">
+          </label>
+
+          <label class="field" for="mirrorHInput">
+            H
+            <input id="mirrorHInput" type="number" min="1" step="1">
+          </label>
+        </div>
+
+        <div class="action-row">
+          <button id="selectMirrorButton" type="button">Pick Area</button>
+          <button id="addMirrorButton" type="button">Add From Fields</button>
+          <button id="clearMirrorsButton" type="button">Clear Mirrors</button>
+        </div>
+
+        <div class="selection-row">
+          <div id="mirrorSelectionStatus" class="mirror-selection-status">Area pick: off</div>
+        </div>
+        <div id="mirrorList" class="mirror-list"></div>
+        <div id="tallOverlaySettingsHome" hidden>
+          <div id="tallOverlaySettingsHost">
+            <div class="overlay-generator-grid">
+              <label class="field" for="overlayColorAInput">
+                Primary colour
+                <input id="overlayColorAInput" type="color" value="#00ff00">
+              </label>
+              <label class="field" for="overlayColorBInput">
+                Secondary colour
+                <input id="overlayColorBInput" type="color" value="#008800">
+              </label>
+              <label class="field" for="overlayTextColorInput">
+                Text colour
+                <input id="overlayTextColorInput" type="color" value="#ffffff">
+              </label>
+              <label class="field" for="overlayPixelCountInput">
+                Number of pixels
+                <input id="overlayPixelCountInput" type="number" min="1" max="50" step="1" value="9">
+              </label>
+              <label class="field" for="overlayPixelHeightInput">
+                Pixel height (%)
+                <input id="overlayPixelHeightInput" type="number" min="1" max="50" step="1" value="8">
+              </label>
+              <label class="field" for="overlayOpacityPixelsInput">
+                Opacity (pixels)
+                <input id="overlayOpacityPixelsInput" type="number" min="0" max="100" step="1" value="100">
+              </label>
+              <label class="field" for="overlayOpacityTextInput">
+                Opacity (text)
+                <input id="overlayOpacityTextInput" type="number" min="0" max="100" step="1" value="100">
+              </label>
+              <label class="field" for="overlayTextSizeInput">
+                Text size
+                <input id="overlayTextSizeInput" type="number" min="1" max="200" step="1" value="40">
+              </label>
+              <label class="field" for="overlayFontStyleSelect">
+                Font
+                <select id="overlayFontStyleSelect">
+                  <option value="Inter-400">Inter</option>
+                  <option value="Inter-700">Inter Bold</option>
+                  <option value="Roboto-400">Roboto</option>
+                  <option value="Roboto-700">Roboto Bold</option>
+                  <option value="Roboto-400i">Roboto Italic</option>
+                  <option value="Oswald-400">Oswald</option>
+                  <option value="Oswald-700">Oswald Bold</option>
+                  <option value="Montserrat-400">Montserrat</option>
+                  <option value="Montserrat-700">Montserrat Bold</option>
+                  <option value="Open Sans-400">Open Sans</option>
+                  <option value="Lato-400">Lato</option>
+                  <option value="JetBrains Mono-400">JetBrains Mono</option>
+                  <option value="JetBrains Mono-700">JetBrains Mono Bold</option>
+                  <option value="Poppins-400">Poppins</option>
+                  <option value="Poppins-700">Poppins Bold</option>
+                  <option value="Fira Code-400">Fira Code</option>
+                  <option value="Fira Code-700">Fira Code Bold</option>
+                  <option value="Source Sans Pro-400">Source Sans Pro</option>
+                  <option value="Source Sans Pro-700">Source Sans Pro Bold</option>
+                </select>
+              </label>
+            </div>
+            <div class="action-row">
+              <button id="exportTallOverlayButton" type="button">Export Measuring Overlay</button>
+            </div>
+          </div>
+        </div>
+        </div>
+      </section>
+      <section class="control-card">
+        <button id="exportWaywallJsonButton" type="button">Export Waywall JSON</button>
+      </section>
+    </aside>
+
+    <section class="workspace">
+      <div class="workspace-toolbar">
+        <span class="workspace-title">Canvas</span>
+        <p class="hint">
+          Pie: <code>1..9</code> dive, <code>0</code> up · Zoom: buttons or <code>Ctrl + wheel</code> · Pan with middle-drag or wheel scroll in Tall view.
+        </p>
+      </div>
+
+      <section class="viewport-wrap" id="viewportWrap">
+        <canvas id="screenCanvas" width="1280" height="720"></canvas>
+        <canvas id="eyeMeasureOverlayCanvas" width="1280" height="720"></canvas>
+        <canvas id="eyeMeasureTextCanvas" width="1280" height="720"></canvas>
+        <div id="mirrorOverlayLayer" class="mirror-overlay-layer"></div>
+        <div id="mirrorSelectionBox" class="mirror-selection-box"></div>
+        <div class="zoom-controls">
+          <button id="zoomOutButton" type="button" title="Zoom out">-</button>
+          <span id="zoomLevelText" class="zoom-level">100%</span>
+          <button id="zoomInButton" type="button" title="Zoom in">+</button>
+          <button id="zoomResetButton" type="button" title="Reset zoom">Reset</button>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script src="public/background-data-uri.js"></script>
+  <script src="public/tall-data-uri.js"></script>
+  <script src="public/bundle.js"></script>
+</body>
+</html>
