@@ -27,6 +27,7 @@ export const ACTION_KEYBINDS_STORAGE_KEY = "f3pie.actionKeybinds.v1";
 export const TALL_OVERLAY_STORAGE_KEY = "f3pie.tallOverlay.v1";
 export const THEME_SETTINGS_STORAGE_KEY = "f3pie.themeSettings.v1";
 export const WINDOW_SETTINGS_STORAGE_KEY = "f3pie.windowSettings.v1";
+export const INPUT_SETTINGS_STORAGE_KEY = "f3pie.inputSettings.v1";
 export const MAX_MIRROR_COLOR_KEYS = 10;
 export const MIRROR_KEY_TOLERANCE = 4;
 export const MIN_SCREEN_ZOOM = 1;
@@ -78,6 +79,15 @@ export const DEFAULT_THEME_SETTINGS = Object.freeze({
 export const DEFAULT_WINDOW_SETTINGS = Object.freeze({
   fullscreen_width: 0,
   fullscreen_height: 0
+});
+
+export const DEFAULT_INPUT_SETTINGS = Object.freeze({
+  layout: "us",
+  remaps: {},
+  repeat_rate: 40,
+  repeat_delay: 300,
+  sensitivity: 1.0,
+  confine_pointer: false
 });
 
 export const ACTION_KEYS = Object.freeze({

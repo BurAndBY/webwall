@@ -216,9 +216,264 @@
     }
 
     input[type="checkbox"] {
-      width: auto;
-      min-height: auto;
+      width: 16px;
+      height: 16px;
+      min-height: 16px;
+      padding: 0;
+      margin: 0;
+      justify-self: start;
       accent-color: #5fbe5f;
+    }
+
+    .field-checkbox {
+      grid-column: 1 / -1;
+    }
+
+    .field-wide {
+      grid-column: 1 / -1;
+    }
+
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 30px;
+      padding: 0 2px;
+    }
+
+    .remap-section {
+      gap: 8px;
+      padding: 8px;
+      border: 1px solid #324056;
+      border-radius: 6px;
+      background: linear-gradient(180deg, #121a25, #101722);
+    }
+
+    .remap-header {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .remap-title {
+      color: #d9e8ff;
+      font-size: 11px;
+    }
+
+    .remap-count {
+      color: var(--muted);
+      font-size: 10px;
+      justify-self: end;
+    }
+
+    .remap-accordion {
+      display: grid;
+      gap: 6px;
+    }
+
+    .remap-item {
+      border: 1px solid #35455d;
+      border-radius: 6px;
+      background: #0f141d;
+      overflow: hidden;
+    }
+
+    .remap-item[open] {
+      border-color: #4f6688;
+      background: #111a26;
+    }
+
+    .remap-item > summary {
+      list-style: none;
+      cursor: pointer;
+      display: grid;
+      gap: 8px;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      padding: 7px 8px;
+    }
+
+    .remap-item > summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .remap-item > summary:focus-visible {
+      outline: 1px solid #7fcfff;
+      outline-offset: -1px;
+    }
+
+    .remap-summary-main {
+      display: flex;
+      align-items: center;
+      min-width: 0;
+      gap: 6px;
+    }
+
+    .remap-chip {
+      min-width: 0;
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid #3e4f67;
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-size: 10px;
+      color: #deebff;
+      background: #131c2a;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .remap-summary-arrow {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .remap-summary-hint {
+      color: #95a7c4;
+      font-size: 10px;
+    }
+
+    .remap-summary-hint::before {
+      content: "▸ ";
+      color: #c1d3ef;
+    }
+
+    .remap-item[open] .remap-summary-hint::before {
+      content: "▾ ";
+    }
+
+    .remap-editor {
+      display: grid;
+      gap: 7px;
+      padding: 8px;
+      border-top: 1px solid #2d3b51;
+    }
+
+    .remap-editor-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 7px;
+    }
+
+    .remap-editor-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .remap-editor-actions button {
+      width: auto;
+      min-width: 68px;
+      padding: 2px 8px;
+      min-height: 26px;
+      font-size: 10px;
+    }
+
+    .remap-danger {
+      border-color: #604253;
+      background: linear-gradient(180deg, #3a2430, #2b1b24);
+    }
+
+    .remap-danger:hover {
+      background: linear-gradient(180deg, #452a37, #301f29);
+    }
+
+    .remap-footer {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .remap-footer button {
+      width: auto;
+      min-width: 88px;
+      min-height: 26px;
+      padding: 2px 8px;
+      font-size: 10px;
+    }
+
+    .remap-empty {
+      color: var(--muted);
+      font-size: 10px;
+      border: 1px dashed #3a4354;
+      border-radius: 4px;
+      padding: 6px 8px;
+      background: #0d1118;
+    }
+
+    .remap-message {
+      min-height: 14px;
+      color: var(--muted);
+      font-size: 10px;
+      line-height: 1.3;
+    }
+
+    .remap-add {
+      border: 1px solid #324056;
+      border-radius: 6px;
+      background: #101722;
+      overflow: hidden;
+      padding: 0;
+    }
+
+    .remap-add > summary {
+      list-style: none;
+      cursor: pointer;
+      padding: 7px 8px;
+      color: #d9e8ff;
+      font-size: 11px;
+      user-select: none;
+    }
+
+    .remap-add > summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .remap-add > summary::before {
+      content: "▸ ";
+      color: #c1d3ef;
+    }
+
+    .remap-add[open] > summary::before {
+      content: "▾ ";
+    }
+
+    .remap-add > summary:focus-visible {
+      outline: 1px solid #7fcfff;
+      outline-offset: -1px;
+    }
+
+    .remap-add[open] > summary {
+      border-bottom: 1px solid #2d3b51;
+      background: #121c2a;
+    }
+
+    .remap-add-panel {
+      display: grid;
+      gap: 8px;
+      padding: 8px;
+    }
+
+    .remap-add-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 7px;
+    }
+
+    .remap-add-actions button {
+      min-width: 120px;
+    }
+
+    .remap-message.error {
+      color: #ff9a9a;
+    }
+
+    .remap-message.success {
+      color: #8fdcff;
     }
 
     button {
@@ -655,6 +910,11 @@
         grid-template-columns: 1fr;
       }
 
+      .remap-editor-grid,
+      .remap-add-grid {
+        grid-template-columns: 1fr;
+      }
+
       .action-row button {
         flex: 1 1 100%;
       }
@@ -769,6 +1029,105 @@
               <button id="tallKeybindSet" type="button">Set</button>
               <button id="tallKeybindClear" type="button">Clear</button>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="control-card">
+        <div class="card-header-row">
+          <h2 class="card-title">Input</h2>
+          <button
+            id="inputSettingsToggle"
+            class="card-collapse-toggle"
+            type="button"
+            aria-expanded="true"
+            aria-controls="inputSettingsBody"
+          >▴</button>
+        </div>
+        <div id="inputSettingsBody" class="collapsible-body">
+          <div class="theme-grid">
+            <label class="field" for="inputLayoutInput">
+              Layout
+              <input id="inputLayoutInput" type="text" value="us">
+            </label>
+            <label class="field" for="inputRepeatRateInput">
+              Repeat Rate
+              <input id="inputRepeatRateInput" type="number" step="1" value="40">
+            </label>
+            <label class="field" for="inputRepeatDelayInput">
+              Repeat Delay (ms)
+              <input id="inputRepeatDelayInput" type="number" step="1" value="300">
+            </label>
+            <label class="field" for="inputSensitivityInput">
+              Sensitivity
+              <input id="inputSensitivityInput" type="number" min="0" step="0.05" value="1.0">
+            </label>
+            <label class="field field-checkbox" for="inputConfinePointerInput">
+              Confine Pointer
+              <span class="checkbox-row">
+                <input id="inputConfinePointerInput" type="checkbox">
+                <span>Enable pointer confinement</span>
+              </span>
+            </label>
+            <div class="field field-wide remap-section">
+              <div class="remap-header">
+                <span class="remap-title">Remaps</span>
+                <span id="inputRemapCount" class="remap-count">0 remaps</span>
+              </div>
+              <div id="inputRemapsList" class="remap-accordion"></div>
+              <div class="remap-footer">
+                <button id="inputClearRemapsButton" type="button">Clear All</button>
+              </div>
+              <div id="inputRemapMessage" class="remap-message" aria-live="polite"></div>
+            </div>
+            <details class="field field-wide remap-add" open>
+              <summary>Add Remap</summary>
+              <div class="remap-add-panel">
+                <div class="remap-add-grid">
+                  <label class="field" for="inputRemapSourceInput">
+                    Source
+                    <input id="inputRemapSourceInput" type="text" list="inputRemapKeyOptions" placeholder="Source key (e.g. MB4)">
+                  </label>
+                  <label class="field" for="inputRemapTargetInput">
+                    Target
+                    <input id="inputRemapTargetInput" type="text" list="inputRemapKeyOptions" placeholder="Target key (e.g. Home)">
+                  </label>
+                </div>
+                <div class="action-row remap-add-actions">
+                  <button id="inputAddRemapButton" type="button">Add / Update Remap</button>
+                </div>
+                <p class="hint">Use Enter in either field to save quickly.</p>
+              </div>
+            </details>
+            <datalist id="inputRemapKeyOptions">
+              <option value="MB1"></option>
+              <option value="MB2"></option>
+              <option value="MB3"></option>
+              <option value="MB4"></option>
+              <option value="MB5"></option>
+              <option value="MB6"></option>
+              <option value="MB7"></option>
+              <option value="MB8"></option>
+              <option value="Home"></option>
+              <option value="End"></option>
+              <option value="Insert"></option>
+              <option value="Delete"></option>
+              <option value="Escape"></option>
+              <option value="Tab"></option>
+              <option value="Space"></option>
+              <option value="F1"></option>
+              <option value="F2"></option>
+              <option value="F3"></option>
+              <option value="F4"></option>
+              <option value="F5"></option>
+              <option value="F6"></option>
+              <option value="F7"></option>
+              <option value="F8"></option>
+              <option value="F9"></option>
+              <option value="F10"></option>
+              <option value="F11"></option>
+              <option value="F12"></option>
+            </datalist>
           </div>
         </div>
       </section>

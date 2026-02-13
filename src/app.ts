@@ -15,6 +15,7 @@ import {
   ACTION_KEYS,
   ACTION_KEYBINDS_STORAGE_KEY,
   DEFAULT_ACTION_KEYBINDS,
+  DEFAULT_INPUT_SETTINGS,
   DEFAULT_PIE_PATH,
   DEFAULT_RESOLUTION,
   DEFAULT_THEME_SETTINGS,
@@ -43,6 +44,7 @@ import {
   PROFILER_TREE,
   RESOLUTION_STORAGE_KEY,
   SCREEN_ZOOM_STEP,
+  INPUT_SETTINGS_STORAGE_KEY,
   THEME_SETTINGS_STORAGE_KEY,
   TALL_OVERLAY_STORAGE_KEY,
   WINDOW_SETTINGS_STORAGE_KEY,
@@ -98,6 +100,7 @@ export function runApp(): void {
         tallBgLoadError: false,
         actionKeybinds: { ...DEFAULT_ACTION_KEYBINDS },
         keybindCaptureAction: "",
+        inputSettings: { ...DEFAULT_INPUT_SETTINGS },
         theme: { ...DEFAULT_THEME_SETTINGS },
         windowSettings: { ...DEFAULT_WINDOW_SETTINGS },
         tallOverlay: { ...DEFAULT_TALL_OVERLAY_SETTINGS },
@@ -145,6 +148,20 @@ export function runApp(): void {
       const tallKeybindValue = document.getElementById("tallKeybindValue");
       const tallKeybindSet = document.getElementById("tallKeybindSet");
       const tallKeybindClear = document.getElementById("tallKeybindClear");
+      const inputSettingsToggle = document.getElementById("inputSettingsToggle");
+      const inputSettingsBody = document.getElementById("inputSettingsBody");
+      const inputLayoutInput = document.getElementById("inputLayoutInput");
+      const inputRemapCount = document.getElementById("inputRemapCount");
+      const inputClearRemapsButton = document.getElementById("inputClearRemapsButton");
+      const inputRemapMessage = document.getElementById("inputRemapMessage");
+      const inputRemapsList = document.getElementById("inputRemapsList");
+      const inputRemapSourceInput = document.getElementById("inputRemapSourceInput");
+      const inputRemapTargetInput = document.getElementById("inputRemapTargetInput");
+      const inputAddRemapButton = document.getElementById("inputAddRemapButton");
+      const inputRepeatRateInput = document.getElementById("inputRepeatRateInput");
+      const inputRepeatDelayInput = document.getElementById("inputRepeatDelayInput");
+      const inputSensitivityInput = document.getElementById("inputSensitivityInput");
+      const inputConfinePointerInput = document.getElementById("inputConfinePointerInput");
       const themeSettingsToggle = document.getElementById("themeSettingsToggle");
       const themeSettingsBody = document.getElementById("themeSettingsBody");
       const windowSettingsToggle = document.getElementById("windowSettingsToggle");
@@ -515,6 +532,369 @@ export function runApp(): void {
           }
           toggleCollapsibleState(toggle, body);
         });
+      }
+
+      function normalizeInputRemaps(raw) {
+        if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+          return {};
+        }
+        const remaps = {};
+        for (const [source, target] of Object.entries(raw)) {
+          const normalizedSource = String(source || "").trim();
+          const normalizedTarget = typeof target === "string" ? target.trim() : "";
+          if (!normalizedSource || !normalizedTarget) {
+            continue;
+          }
+          remaps[normalizedSource] = normalizedTarget;
+        }
+        return remaps;
+      }
+
+      function normalizeInputSettings(raw) {
+        const parsed = (raw && typeof raw === "object") ? raw : {};
+        const layout = typeof parsed.layout === "string" ? parsed.layout.trim() : "";
+        const repeatRate = Number(parsed.repeat_rate);
+        const repeatDelay = Number(parsed.repeat_delay);
+        const sensitivity = Number(parsed.sensitivity);
+        return {
+          layout: layout || DEFAULT_INPUT_SETTINGS.layout,
+          remaps: normalizeInputRemaps(parsed.remaps),
+          repeat_rate: Number.isFinite(repeatRate) ? Math.round(repeatRate) : DEFAULT_INPUT_SETTINGS.repeat_rate,
+          repeat_delay: Number.isFinite(repeatDelay) ? Math.round(repeatDelay) : DEFAULT_INPUT_SETTINGS.repeat_delay,
+          sensitivity: Number.isFinite(sensitivity) ? Math.max(0, sensitivity) : DEFAULT_INPUT_SETTINGS.sensitivity,
+          confine_pointer: parsed.confine_pointer === true
+        };
+      }
+
+      function loadInputSettingsFromStorage() {
+        try {
+          const raw = localStorage.getItem(INPUT_SETTINGS_STORAGE_KEY);
+          if (!raw) {
+            state.inputSettings = { ...DEFAULT_INPUT_SETTINGS };
+            return;
+          }
+          state.inputSettings = normalizeInputSettings(JSON.parse(raw));
+        } catch (error) {
+          state.inputSettings = { ...DEFAULT_INPUT_SETTINGS };
+        }
+      }
+
+      function saveInputSettingsToStorage() {
+        try {
+          localStorage.setItem(INPUT_SETTINGS_STORAGE_KEY, JSON.stringify(state.inputSettings));
+        } catch (error) {
+          // Ignore storage errors (private mode/full quota).
+        }
+      }
+
+      function syncInputControls() {
+        if (!inputLayoutInput) {
+          return;
+        }
+        inputLayoutInput.value = state.inputSettings.layout;
+        inputRepeatRateInput.value = String(state.inputSettings.repeat_rate);
+        inputRepeatDelayInput.value = String(state.inputSettings.repeat_delay);
+        inputSensitivityInput.value = String(state.inputSettings.sensitivity);
+        inputConfinePointerInput.checked = Boolean(state.inputSettings.confine_pointer);
+        renderInputRemapsEditor();
+      }
+
+      let pendingRemapOpenSource = "";
+
+      function setInputRemapMessage(message = "", tone = "") {
+        if (!inputRemapMessage) {
+          return;
+        }
+        inputRemapMessage.textContent = message;
+        inputRemapMessage.classList.toggle("error", tone === "error");
+        inputRemapMessage.classList.toggle("success", tone === "success");
+      }
+
+      function renderInputRemapsEditor() {
+        if (!inputRemapsList) {
+          return;
+        }
+        const openSources = new Set();
+        inputRemapsList.querySelectorAll(".remap-item[open]").forEach((item) => {
+          const source = item.getAttribute("data-source");
+          if (source) {
+            openSources.add(source);
+          }
+        });
+        inputRemapsList.innerHTML = "";
+        const entries = Object.entries(state.inputSettings.remaps)
+          .sort(([a], [b]) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+        if (inputRemapCount) {
+          inputRemapCount.textContent = `${entries.length} remap${entries.length === 1 ? "" : "s"}`;
+        }
+        if (inputClearRemapsButton) {
+          inputClearRemapsButton.disabled = entries.length === 0;
+        }
+        if (!entries.length) {
+          const empty = document.createElement("div");
+          empty.className = "remap-empty";
+          empty.textContent = "No remaps configured. Add one below.";
+          inputRemapsList.appendChild(empty);
+          pendingRemapOpenSource = "";
+          return;
+        }
+        let openedAny = false;
+        for (let index = 0; index < entries.length; index += 1) {
+          const [source, target] = entries[index];
+          const item = document.createElement("details");
+          item.className = "remap-item";
+          item.setAttribute("data-source", source);
+          const shouldOpen = openSources.has(source) || pendingRemapOpenSource === source;
+          if (shouldOpen) {
+            item.open = true;
+            openedAny = true;
+          }
+
+          const summary = document.createElement("summary");
+          summary.className = "remap-summary";
+          const summaryMain = document.createElement("span");
+          summaryMain.className = "remap-summary-main";
+          const sourceInput = document.createElement("input");
+          sourceInput.type = "text";
+          sourceInput.value = source;
+          sourceInput.placeholder = "Source";
+          sourceInput.setAttribute("list", "inputRemapKeyOptions");
+          const sourceChip = document.createElement("span");
+          sourceChip.className = "remap-chip";
+          sourceChip.textContent = source;
+          summaryMain.appendChild(sourceChip);
+
+          const arrow = document.createElement("span");
+          arrow.className = "remap-summary-arrow";
+          arrow.textContent = "→";
+          summaryMain.appendChild(arrow);
+
+          const targetInput = document.createElement("input");
+          targetInput.type = "text";
+          targetInput.value = target;
+          targetInput.placeholder = "Target";
+          targetInput.setAttribute("list", "inputRemapKeyOptions");
+          const targetChip = document.createElement("span");
+          targetChip.className = "remap-chip";
+          targetChip.textContent = target;
+          summaryMain.appendChild(targetChip);
+
+          const summaryHint = document.createElement("span");
+          summaryHint.className = "remap-summary-hint";
+          summaryHint.textContent = "Edit";
+
+          summary.appendChild(summaryMain);
+          summary.appendChild(summaryHint);
+          item.appendChild(summary);
+
+          const editor = document.createElement("div");
+          editor.className = "remap-editor";
+
+          const editorGrid = document.createElement("div");
+          editorGrid.className = "remap-editor-grid";
+          const sourceField = document.createElement("label");
+          sourceField.className = "field";
+          sourceField.textContent = "Source";
+          sourceField.appendChild(sourceInput);
+          editorGrid.appendChild(sourceField);
+
+          const targetField = document.createElement("label");
+          targetField.className = "field";
+          targetField.textContent = "Target";
+          targetField.appendChild(targetInput);
+          editorGrid.appendChild(targetField);
+          editor.appendChild(editorGrid);
+
+          const actions = document.createElement("div");
+          actions.className = "remap-editor-actions";
+
+          const commit = () => {
+            updateInputRemap(source, sourceInput.value, targetInput.value);
+          };
+          const updateSummaryPreview = () => {
+            const nextSource = String(sourceInput.value || "").trim();
+            const nextTarget = String(targetInput.value || "").trim();
+            sourceChip.textContent = nextSource || "Source";
+            targetChip.textContent = nextTarget || "Target";
+          };
+          sourceInput.addEventListener("input", updateSummaryPreview);
+          targetInput.addEventListener("input", updateSummaryPreview);
+          sourceInput.addEventListener("keydown", (event) => {
+            if (event.key !== "Enter") {
+              return;
+            }
+            commit();
+            event.preventDefault();
+          });
+          sourceInput.addEventListener("keydown", (event) => {
+            if (event.key === "Escape") {
+              sourceInput.value = source;
+              targetInput.value = target;
+              updateSummaryPreview();
+              event.preventDefault();
+            }
+          });
+          targetInput.addEventListener("keydown", (event) => {
+            if (event.key !== "Enter") {
+              return;
+            }
+            commit();
+            event.preventDefault();
+          });
+          targetInput.addEventListener("keydown", (event) => {
+            if (event.key === "Escape") {
+              sourceInput.value = source;
+              targetInput.value = target;
+              updateSummaryPreview();
+              event.preventDefault();
+            }
+          });
+
+          const saveButton = document.createElement("button");
+          saveButton.type = "button";
+          saveButton.textContent = "Save";
+          saveButton.addEventListener("click", () => {
+            commit();
+          });
+          actions.appendChild(saveButton);
+
+          const resetButton = document.createElement("button");
+          resetButton.type = "button";
+          resetButton.textContent = "Reset";
+          resetButton.addEventListener("click", () => {
+            sourceInput.value = source;
+            targetInput.value = target;
+            updateSummaryPreview();
+            sourceInput.focus();
+          });
+          actions.appendChild(resetButton);
+
+          const removeButton = document.createElement("button");
+          removeButton.type = "button";
+          removeButton.textContent = "Remove";
+          removeButton.className = "remap-danger";
+          removeButton.addEventListener("click", () => {
+            removeInputRemap(source);
+          });
+          actions.appendChild(removeButton);
+          editor.appendChild(actions);
+
+          item.appendChild(editor);
+          inputRemapsList.appendChild(item);
+        }
+        if (!openedAny) {
+          const firstItem = inputRemapsList.querySelector(".remap-item");
+          if (firstItem instanceof HTMLDetailsElement) {
+            firstItem.open = true;
+          }
+        }
+        pendingRemapOpenSource = "";
+      }
+
+      function updateInputRemap(currentSource, source, target) {
+        if (!Object.prototype.hasOwnProperty.call(state.inputSettings.remaps, currentSource)) {
+          return;
+        }
+        const nextSource = String(source || "").trim();
+        const nextTarget = String(target || "").trim();
+        if (!nextSource || !nextTarget) {
+          setInputRemapMessage("Both source and target are required.", "error");
+          syncInputControls();
+          return;
+        }
+        const remaps = {
+          ...state.inputSettings.remaps
+        };
+        if (nextSource !== currentSource && Object.prototype.hasOwnProperty.call(remaps, nextSource)) {
+          setInputRemapMessage(`Source '${nextSource}' already exists.`, "error");
+          syncInputControls();
+          return;
+        }
+        delete remaps[currentSource];
+        remaps[nextSource] = nextTarget;
+        state.inputSettings = normalizeInputSettings({
+          ...state.inputSettings,
+          remaps: normalizeInputRemaps(remaps)
+        });
+        pendingRemapOpenSource = nextSource;
+        setInputRemapMessage("Remap updated.", "success");
+        syncInputControls();
+        saveInputSettingsToStorage();
+      }
+
+      function removeInputRemap(source) {
+        if (!Object.prototype.hasOwnProperty.call(state.inputSettings.remaps, source)) {
+          return;
+        }
+        const remaps = {
+          ...state.inputSettings.remaps
+        };
+        delete remaps[source];
+        state.inputSettings = normalizeInputSettings({
+          ...state.inputSettings,
+          remaps
+        });
+        setInputRemapMessage("Remap removed.", "success");
+        syncInputControls();
+        saveInputSettingsToStorage();
+      }
+
+      function addInputRemapFromControls() {
+        const source = String(inputRemapSourceInput?.value || "").trim();
+        const target = String(inputRemapTargetInput?.value || "").trim();
+        if (!source || !target) {
+          setInputRemapMessage("Provide both source and target for a remap.", "error");
+          return;
+        }
+        const remaps = {
+          ...state.inputSettings.remaps
+        };
+        const action = Object.prototype.hasOwnProperty.call(remaps, source) ? "updated" : "added";
+        remaps[source] = target;
+        state.inputSettings = normalizeInputSettings({
+          ...state.inputSettings,
+          remaps
+        });
+        pendingRemapOpenSource = source;
+        if (inputRemapSourceInput) {
+          inputRemapSourceInput.value = "";
+          inputRemapSourceInput.focus();
+        }
+        if (inputRemapTargetInput) {
+          inputRemapTargetInput.value = "";
+        }
+        setInputRemapMessage(`Remap ${action}.`, "success");
+        syncInputControls();
+        saveInputSettingsToStorage();
+      }
+
+      function clearAllInputRemaps() {
+        if (!Object.keys(state.inputSettings.remaps).length) {
+          return;
+        }
+        state.inputSettings = normalizeInputSettings({
+          ...state.inputSettings,
+          remaps: {}
+        });
+        setInputRemapMessage("All remaps cleared.", "success");
+        syncInputControls();
+        saveInputSettingsToStorage();
+      }
+
+      function updateInputSettingsFromControls() {
+        if (!inputLayoutInput) {
+          return;
+        }
+        state.inputSettings = normalizeInputSettings({
+          layout: inputLayoutInput.value,
+          remaps: state.inputSettings.remaps,
+          repeat_rate: inputRepeatRateInput.value,
+          repeat_delay: inputRepeatDelayInput.value,
+          sensitivity: inputSensitivityInput.value,
+          confine_pointer: inputConfinePointerInput.checked
+        });
+        syncInputControls();
+        saveInputSettingsToStorage();
       }
 
       function normalizeThemeHex(rawValue, fallback) {
@@ -953,7 +1333,7 @@ export function runApp(): void {
         };
       }
 
-      function buildWaywallExportInput() {
+      function buildWaywallExportActions() {
         const entries = [
           ["open_ninjabrain_bot", state.actionKeybinds.openNinjabrain],
           ["thin", state.actionKeybinds.thin],
@@ -969,6 +1349,10 @@ export function runApp(): void {
           }
         }
         return input;
+      }
+
+      function buildWaywallExportInput() {
+        return normalizeInputSettings(state.inputSettings);
       }
 
       function buildWaywallExportTheme() {
@@ -987,6 +1371,7 @@ export function runApp(): void {
       function buildWaywallExport() {
         return {
           config: {
+            actions: buildWaywallExportActions(),
             input: buildWaywallExportInput(),
             theme: buildWaywallExportTheme(),
             window: {
@@ -1203,7 +1588,7 @@ export function runApp(): void {
       }
 
       function normalizeMirrorVisibility(raw) {
-        return (raw === "wide" || raw === "thin" || raw === "tall" || raw === "all")
+        return (raw === "preset" || raw === "wide" || raw === "thin" || raw === "tall" || raw === "all")
           ? raw
           : "all";
       }
@@ -3157,6 +3542,43 @@ export function runApp(): void {
         tallKeybindClear.addEventListener("click", () => {
           clearActionKeybind(ACTION_KEYS.tall);
         });
+        if (inputLayoutInput) {
+          inputLayoutInput.addEventListener("input", () => {
+            updateInputSettingsFromControls();
+          });
+          inputRepeatRateInput.addEventListener("change", () => {
+            updateInputSettingsFromControls();
+          });
+          inputRepeatDelayInput.addEventListener("change", () => {
+            updateInputSettingsFromControls();
+          });
+          inputSensitivityInput.addEventListener("change", () => {
+            updateInputSettingsFromControls();
+          });
+          inputConfinePointerInput.addEventListener("change", () => {
+            updateInputSettingsFromControls();
+          });
+          inputAddRemapButton.addEventListener("click", () => {
+            addInputRemapFromControls();
+          });
+          inputRemapSourceInput.addEventListener("keydown", (event) => {
+            if (event.key !== "Enter") {
+              return;
+            }
+            addInputRemapFromControls();
+            event.preventDefault();
+          });
+          inputRemapTargetInput.addEventListener("keydown", (event) => {
+            if (event.key !== "Enter") {
+              return;
+            }
+            addInputRemapFromControls();
+            event.preventDefault();
+          });
+          inputClearRemapsButton.addEventListener("click", () => {
+            clearAllInputRemaps();
+          });
+        }
         overlayColorAInput.addEventListener("input", () => {
           updateTallOverlayFromControls();
         });
@@ -3234,6 +3656,7 @@ export function runApp(): void {
         }
 
         bindCollapsibleToggle(actionsSettingsToggle, actionsSettingsBody);
+        bindCollapsibleToggle(inputSettingsToggle, inputSettingsBody);
         bindCollapsibleToggle(themeSettingsToggle, themeSettingsBody);
         bindCollapsibleToggle(windowSettingsToggle, windowSettingsBody);
         bindCollapsibleToggle(resolutionViewToggle, resolutionViewBody);
@@ -3506,6 +3929,7 @@ export function runApp(): void {
 
         fillResolutionPresetSelect();
         loadActionKeybindsFromStorage();
+        loadInputSettingsFromStorage();
         loadThemeSettingsFromStorage();
         loadWindowSettingsFromStorage();
         loadTallOverlaySettingsFromStorage();
@@ -3522,10 +3946,12 @@ export function runApp(): void {
         setDisplayVariant("preset");
         setCollapsibleState(resolutionViewToggle, resolutionViewBody, false);
         setCollapsibleState(actionsSettingsToggle, actionsSettingsBody, false);
+        setCollapsibleState(inputSettingsToggle, inputSettingsBody, false);
         setCollapsibleState(themeSettingsToggle, themeSettingsBody, false);
         setCollapsibleState(windowSettingsToggle, windowSettingsBody, false);
         setCollapsibleState(mirrorsToggle, mirrorsBody, false);
         updateActionKeybindUi();
+        syncInputControls();
         syncThemeControls();
         syncWindowControls();
         syncTallOverlayControls();
